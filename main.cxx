@@ -47,13 +47,20 @@ int main()
         0.5f,
         0.0f};
 
-    // vertex buffer object
+    // vertex array object
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    // vertex buffer object (will be added to bound vao)
     GLuint vbo;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+    // copy vertex data into buffer
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // tell OpenGL how to interpret vertex data and enable it as the
+    // tell OpenGL how to interpret vertex data and enable it as the first attribute (will also be stored in bound vao)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
     glEnableVertexAttribArray(0);
 
@@ -91,8 +98,6 @@ int main()
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
-    glUseProgram(shaderProgram);
-
     // delete shaders that have been linked to a program
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
@@ -105,6 +110,10 @@ int main()
         // rendering
         // state using, uses the clearColor set earlier
         glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(shaderProgram);
+        glBindVertexArray(vao);
+        // TODO: draw triangle
 
         // poll events and swap buffers
         glfwPollEvents();
