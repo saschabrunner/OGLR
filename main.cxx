@@ -113,7 +113,7 @@ int main()
 
         glUseProgram(shaderProgram);
         glBindVertexArray(vao);
-        // TODO: draw triangle
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // poll events and swap buffers
         glfwPollEvents();
