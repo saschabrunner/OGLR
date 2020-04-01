@@ -7,6 +7,22 @@ void checkShaderCompileSuccess(GLuint shader);
 void framebufferSizeCallback(GLFWwindow *window, int widht, int height);
 void processInput(GLFWwindow *window);
 
+const char *vertexShaderSource = "#version 330 core\n"
+                                 "layout (location = 0) in vec3 pos;\n"
+                                 "\n"
+                                 "void main()\n"
+                                 "{\n"
+                                 "    gl_Position = vec4(pos, 1.0);\n"
+                                 "}\0";
+
+const char *fragmentShaderSource = "#version 330 core\n"
+                                   "out vec4 color;\n"
+                                   "\n"
+                                   "void main()\n"
+                                   "{\n"
+                                   "    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+                                   "}\0";
+
 int main()
 {
     glfwInit();
@@ -32,20 +48,15 @@ int main()
     glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
+    // set clear color (background color)
     // state setting, call once
     glClearColor(.8f, .3f, .3f, 1.0f);
 
     // vertices for a triangle
     GLfloat vertices[] = {
-        -0.5f,
-        -0.5f,
-        0.0f,
-        0.5f,
-        -0.5f,
-        0.0f,
-        0.0f,
-        0.5f,
-        0.0f};
+        -0.5f, -0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f,
+        0.0f, 0.5f, 0.0f};
 
     // vertex array object
     GLuint vao;
@@ -64,29 +75,19 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
     glEnableVertexAttribArray(0);
 
-    // vertex shader
-    const char *vertexShaderSource = "#version 330 core\n"
-                                     "layout (location = 0) in vec3 pos;\n"
-                                     "\n"
-                                     "void main()\n"
-                                     "{\n"
-                                     "    gl_Position = vec4(pos, 1.0);\n"
-                                     "}\0";
+    // we can unbind the buffer, since we just registered it to the vao
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    // and we can also unbind the array object, since we finished setting it up
+    glBindVertexArray(0);
+
+    // vertex shader
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
     checkShaderCompileSuccess(vertexShader);
 
     // fragment shader
-    const char *fragmentShaderSource = "#version 330 core\n"
-                                       "out vec4 color;\n"
-                                       "\n"
-                                       "void main()\n"
-                                       "{\n"
-                                       "    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                                       "}\0";
-
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
@@ -97,6 +98,7 @@ int main()
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
+    checkProgramCompileSuccess(shaderProgram);
 
     // delete shaders that have been linked to a program
     glDeleteShader(vertexShader);
@@ -107,13 +109,14 @@ int main()
         // input
         processInput(window);
 
-        // rendering
-        // state using, uses the clearColor set earlier
-        glClear(GL_COLOR_BUFFER_BIT);
+        // render background
+        glClear(GL_COLOR_BUFFER_BIT); // state using, uses the clearColor set earlier
 
+        // render triangle with shader program
         glUseProgram(shaderProgram);
-        glBindVertexArray(vao);
+        glBindVertexArray(vao); // technically that's not needed, since this is the only vao we have right now
         glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindVertexArray(0); // technically that's not needed, since this is the only vao we have right now
 
         // poll events and swap buffers
         glfwPollEvents();
