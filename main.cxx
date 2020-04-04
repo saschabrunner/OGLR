@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 
 void checkShaderCompileSuccess(GLuint shader);
+void checkProgramCompileSuccess(GLuint program);
 void framebufferSizeCallback(GLFWwindow *window, int widht, int height);
 void processInput(GLFWwindow *window);
 
@@ -52,31 +53,48 @@ int main()
     // state setting, call once
     glClearColor(.8f, .3f, .3f, 1.0f);
 
-    // vertices for a triangle
+    // vertices for two triangles making a square
     GLfloat vertices[] = {
-        -0.5f, -0.5f, 0.0f,
+        0.5f, 0.5f, 0.0f,
         0.5f, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f};
+        -0.5f, -0.5f, 0.0f,
+        -0.5f, 0.5f, 0.0f};
+
+    GLuint triangles[] = {
+        0, 1, 3,  // first triangle
+        1, 2, 3}; // second triangle
 
     // vertex array object
     GLuint vao;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
-    // vertex buffer object (will be added to bound vao)
+    // vertex buffer object
     GLuint vbo;
     glGenBuffers(1, &vbo);
+    // note: glBindBuffer does not affect the vao when binding to GL_ARRAY_BUFFER!
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
     // copy vertex data into buffer
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // tell OpenGL how to interpret vertex data and enable it as the first attribute (will also be stored in bound vao)
+    // tell OpenGL how to interpret vertex data and enable it as the first attribute
+    // only after this call will the bound vao be modified!
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
     glEnableVertexAttribArray(0);
 
     // we can unbind the buffer, since we just registered it to the vao
+    // note: this is only allowed for GL_ARRAY_BUFFER, otherwise this would affect the vao state!
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // element buffer object (will also be bound to vao)
+    GLuint ebo;
+    glGenBuffers(1, &ebo);
+    // note: in this case glBindBuffer will affect the state of the vao!
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+    // copy index data of the vertices into buffer
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(triangles), triangles, GL_STATIC_DRAW);
 
     // and we can also unbind the array object, since we finished setting it up
     glBindVertexArray(0);
@@ -114,9 +132,9 @@ int main()
 
         // render triangle with shader program
         glUseProgram(shaderProgram);
-        glBindVertexArray(vao); // technically that's not needed, since this is the only vao we have right now
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0); // technically that's not needed, since this is the only vao we have right now
+        glBindVertexArray(vao); // technically that's not needed every loop, since this is the only vao we have right now
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0); // technically that's not needed every loop, since this is the only vao we have right now
 
         // poll events and swap buffers
         glfwPollEvents();
@@ -130,13 +148,14 @@ int main()
 void checkProgramCompileSuccess(GLuint program)
 {
     GLint success;
-    glGetProgramiv(program, GL_COMPILE_STATUS, &success);
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
 
     if (!success)
     {
         char infoLog[512];
         glGetProgramInfoLog(program, 512, NULL, infoLog);
-        std::cout << "Shader compilation failed\n"
+        std::cout << "Program compilation failed\n"
+                  << success
                   << infoLog << std::endl;
     }
 }
