@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+GLuint createShaderProgram(const char *vertexShaderSource, const char *fragmentShaderSource);
 GLuint createTriangleVao(float vertices[]);
 void checkShaderCompileSuccess(GLuint shader);
 void checkProgramCompileSuccess(GLuint program);
@@ -17,13 +18,21 @@ const char *vertexShaderSource = "#version 330 core\n"
                                  "    gl_Position = vec4(pos, 1.0);\n"
                                  "}\0";
 
-const char *fragmentShaderSource = "#version 330 core\n"
-                                   "out vec4 color;\n"
-                                   "\n"
-                                   "void main()\n"
-                                   "{\n"
-                                   "    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                                   "}\0";
+const char *fragmentShaderOrangeSource = "#version 330 core\n"
+                                         "out vec4 color;\n"
+                                         "\n"
+                                         "void main()\n"
+                                         "{\n"
+                                         "    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+                                         "}\0";
+
+const char *fragmentShaderYellowSource = "#version 330 core\n"
+                                         "out vec4 color;\n"
+                                         "\n"
+                                         "void main()\n"
+                                         "{\n"
+                                         "    color = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
+                                         "}\0";
 
 int main()
 {
@@ -69,6 +78,45 @@ int main()
 
     GLuint vaoTwo = createTriangleVao(triangleTwo);
 
+    // create shader programs and link shaders
+    GLuint shaderProgramOrange = createShaderProgram(vertexShaderSource, fragmentShaderOrangeSource);
+    GLuint shaderProgramYellow = createShaderProgram(vertexShaderSource, fragmentShaderYellowSource);
+
+    while (!glfwWindowShouldClose(window))
+    {
+        // input
+        processInput(window);
+
+        // render background
+        glClear(GL_COLOR_BUFFER_BIT); // state using, uses the clearColor set earlier
+
+        // use the orange shader
+        glUseProgram(shaderProgramOrange);
+
+        // draw the first triangle
+        glBindVertexArray(vaoOne);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindVertexArray(0);
+
+        // use the yellow shader
+        glUseProgram(shaderProgramYellow);
+
+        // draw the second triangle
+        glBindVertexArray(vaoTwo);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindVertexArray(0);
+
+        // poll events and swap buffers
+        glfwPollEvents();
+        glfwSwapBuffers(window);
+    }
+
+    glfwTerminate();
+    return 0;
+}
+
+GLuint createShaderProgram(const char *vertexShaderSource, const char *fragmentShaderSource)
+{
     // vertex shader
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -92,34 +140,7 @@ int main()
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    while (!glfwWindowShouldClose(window))
-    {
-        // input
-        processInput(window);
-
-        // render background
-        glClear(GL_COLOR_BUFFER_BIT); // state using, uses the clearColor set earlier
-
-        // render triangle with shader program
-        glUseProgram(shaderProgram);
-
-        // draw the first triangle
-        glBindVertexArray(vaoOne);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
-
-        // draw the second triangle
-        glBindVertexArray(vaoTwo);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
-
-        // poll events and swap buffers
-        glfwPollEvents();
-        glfwSwapBuffers(window);
-    }
-
-    glfwTerminate();
-    return 0;
+    return shaderProgram;
 }
 
 /**
