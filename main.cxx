@@ -55,14 +55,11 @@ int main()
 
     // vertices for two triangles making a square
     GLfloat vertices[] = {
-        0.5f, 0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        -0.5f, 0.5f, 0.0f};
-
-    GLuint triangles[] = {
-        0, 1, 3,  // first triangle
-        1, 2, 3}; // second triangle
+        0.25f, 0.5f, 0.0f,
+        0.5f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f,
+        -0.25f, 0.5f, 0.0f,
+        -0.5f, 0.0f, 0.0f};
 
     // vertex array object
     GLuint vao;
@@ -86,15 +83,6 @@ int main()
     // we can unbind the buffer, since we just registered it to the vao
     // note: this is only allowed for GL_ARRAY_BUFFER, otherwise this would affect the vao state!
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // element buffer object (will also be bound to vao)
-    GLuint ebo;
-    glGenBuffers(1, &ebo);
-    // note: in this case glBindBuffer will affect the state of the vao!
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-
-    // copy index data of the vertices into buffer
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(triangles), triangles, GL_STATIC_DRAW);
 
     // and we can also unbind the array object, since we finished setting it up
     glBindVertexArray(0);
@@ -133,7 +121,8 @@ int main()
         // render triangle with shader program
         glUseProgram(shaderProgram);
         glBindVertexArray(vao); // technically that's not needed every loop, since this is the only vao we have right now
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 2, 3);
         glBindVertexArray(0); // technically that's not needed every loop, since this is the only vao we have right now
 
         // poll events and swap buffers
