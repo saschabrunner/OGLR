@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -13,22 +14,19 @@ void processInput(GLFWwindow *window);
 const char *vertexShaderSource = "#version 330 core\n"
                                  "layout (location = 0) in vec3 pos;\n"
                                  "\n"
-                                 "out vec4 vertexColor;\n"
-                                 "\n"
                                  "void main()\n"
                                  "{\n"
                                  "    gl_Position = vec4(pos, 1.0);\n"
-                                 "    vertexColor = vec4(0.5, 0.0, 0.0, 1.0);"
                                  "}\0";
 
 const char *fragmentShaderSource = "#version 330 core\n"
-                                   "in vec4 vertexColor;\n"
+                                   "uniform vec4 uniformColor;\n"
                                    "\n"
                                    "out vec4 color;\n"
                                    "\n"
                                    "void main()\n"
                                    "{\n"
-                                   "    color = vertexColor;\n"
+                                   "    color = uniformColor;\n"
                                    "}\0";
 
 int main()
@@ -86,8 +84,16 @@ int main()
         // render background
         glClear(GL_COLOR_BUFFER_BIT); // state using, uses the clearColor set earlier
 
+        // update uniform color in fragment shader
+        double time = glfwGetTime();
+        GLfloat greenValue = (sin(time) / 2.0f) + 0.5f;
+        int uniformLocation = glGetUniformLocation(shaderProgram, "uniformColor");
+
         // use our shader program
         glUseProgram(shaderProgram);
+
+        // update uniform value of shader program currently in use
+        glUniform4f(uniformLocation, 0.0f, greenValue, 0.0f, 0.0f);
 
         // draw the first triangle
         glBindVertexArray(vaoOne);
