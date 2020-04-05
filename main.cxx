@@ -13,26 +13,23 @@ void processInput(GLFWwindow *window);
 const char *vertexShaderSource = "#version 330 core\n"
                                  "layout (location = 0) in vec3 pos;\n"
                                  "\n"
+                                 "out vec4 vertexColor;\n"
+                                 "\n"
                                  "void main()\n"
                                  "{\n"
                                  "    gl_Position = vec4(pos, 1.0);\n"
+                                 "    vertexColor = vec4(0.5, 0.0, 0.0, 1.0);"
                                  "}\0";
 
-const char *fragmentShaderOrangeSource = "#version 330 core\n"
-                                         "out vec4 color;\n"
-                                         "\n"
-                                         "void main()\n"
-                                         "{\n"
-                                         "    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                                         "}\0";
-
-const char *fragmentShaderYellowSource = "#version 330 core\n"
-                                         "out vec4 color;\n"
-                                         "\n"
-                                         "void main()\n"
-                                         "{\n"
-                                         "    color = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
-                                         "}\0";
+const char *fragmentShaderSource = "#version 330 core\n"
+                                   "in vec4 vertexColor;\n"
+                                   "\n"
+                                   "out vec4 color;\n"
+                                   "\n"
+                                   "void main()\n"
+                                   "{\n"
+                                   "    color = vertexColor;\n"
+                                   "}\0";
 
 int main()
 {
@@ -79,8 +76,7 @@ int main()
     GLuint vaoTwo = createTriangleVao(triangleTwo);
 
     // create shader programs and link shaders
-    GLuint shaderProgramOrange = createShaderProgram(vertexShaderSource, fragmentShaderOrangeSource);
-    GLuint shaderProgramYellow = createShaderProgram(vertexShaderSource, fragmentShaderYellowSource);
+    GLuint shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -90,16 +86,13 @@ int main()
         // render background
         glClear(GL_COLOR_BUFFER_BIT); // state using, uses the clearColor set earlier
 
-        // use the orange shader
-        glUseProgram(shaderProgramOrange);
+        // use our shader program
+        glUseProgram(shaderProgram);
 
         // draw the first triangle
         glBindVertexArray(vaoOne);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
-
-        // use the yellow shader
-        glUseProgram(shaderProgramYellow);
 
         // draw the second triangle
         glBindVertexArray(vaoTwo);
