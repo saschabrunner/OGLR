@@ -1,11 +1,9 @@
 #include <iostream>
-#include <cmath>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 GLuint createShaderProgram(const char *vertexShaderSource, const char *fragmentShaderSource);
-GLuint createTriangleVao(float vertices[]);
 void checkShaderCompileSuccess(GLuint shader);
 void checkProgramCompileSuccess(GLuint program);
 void framebufferSizeCallback(GLFWwindow *window, int widht, int height);
@@ -13,20 +11,24 @@ void processInput(GLFWwindow *window);
 
 const char *vertexShaderSource = "#version 330 core\n"
                                  "layout (location = 0) in vec3 pos;\n"
+                                 "layout (location = 1) in vec3 color;\n"
+                                 "\n"
+                                 "out vec3 vertexColor;"
                                  "\n"
                                  "void main()\n"
                                  "{\n"
                                  "    gl_Position = vec4(pos, 1.0);\n"
+                                 "    vertexColor = color;"
                                  "}\0";
 
 const char *fragmentShaderSource = "#version 330 core\n"
-                                   "uniform vec4 uniformColor;\n"
+                                   "in vec3 vertexColor;\n"
                                    "\n"
                                    "out vec4 color;\n"
                                    "\n"
                                    "void main()\n"
                                    "{\n"
-                                   "    color = uniformColor;\n"
+                                   "    color = vec4(vertexColor, 1.0);\n"
                                    "}\0";
 
 int main()
@@ -59,19 +61,43 @@ int main()
     glClearColor(.8f, .3f, .3f, 1.0f);
 
     // create two triangles with one vao for each
-    GLfloat triangleOne[] = {
-        0.25f, 0.5f, 0.0f,
-        0.5f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f};
+    // clang-format off
+    GLfloat vertices[] = {
+        // positions            colors
+         0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   // bottom right
+        -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   // bottom left
+         0.0f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f    // top
+    };
+    // clang-format on
 
-    GLuint vaoOne = createTriangleVao(triangleOne);
+    // vertex array object
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
 
-    GLfloat triangleTwo[] = {
-        0.0f, 0.0f, 0.0f,
-        -0.25f, 0.5f, 0.0f,
-        -0.5f, 0.0f, 0.0f};
+    // vertex buffer object
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+    // note: glBindBuffer does not affect the vao when binding to GL_ARRAY_BUFFER! glVertexAttribPointer will!
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-    GLuint vaoTwo = createTriangleVao(triangleTwo);
+    // copy vertex data into buffer
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    // color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
+    // we can unbind the buffer, since we just registered it to the vao
+    // note: this is only allowed for GL_ARRAY_BUFFER, otherwise this would affect the vao state!
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // and we can also unbind the array object, since we finished setting it up
+    glBindVertexArray(0);
 
     // create shader programs and link shaders
     GLuint shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
@@ -84,24 +110,11 @@ int main()
         // render background
         glClear(GL_COLOR_BUFFER_BIT); // state using, uses the clearColor set earlier
 
-        // update uniform color in fragment shader
-        double time = glfwGetTime();
-        GLfloat greenValue = (sin(time) / 2.0f) + 0.5f;
-        int uniformLocation = glGetUniformLocation(shaderProgram, "uniformColor");
-
         // use our shader program
         glUseProgram(shaderProgram);
 
-        // update uniform value of shader program currently in use
-        glUniform4f(uniformLocation, 0.0f, greenValue, 0.0f, 0.0f);
-
-        // draw the first triangle
-        glBindVertexArray(vaoOne);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
-
-        // draw the second triangle
-        glBindVertexArray(vaoTwo);
+        // draw the triangle
+        glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
 
@@ -140,40 +153,6 @@ GLuint createShaderProgram(const char *vertexShaderSource, const char *fragmentS
     glDeleteShader(fragmentShader);
 
     return shaderProgram;
-}
-
-/**
- * vertices is currently expected to have a length of 9!
- */
-GLuint createTriangleVao(GLfloat vertices[])
-{
-    // vertex array object
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    // vertex buffer object
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
-    // note: glBindBuffer does not affect the vao when binding to GL_ARRAY_BUFFER!
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-    // copy vertex data into buffer
-    glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), vertices, GL_STATIC_DRAW);
-
-    // tell OpenGL how to interpret vertex data and enable it as the first attribute
-    // only after this call will the bound vao be modified!
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
-    glEnableVertexAttribArray(0);
-
-    // we can unbind the buffer, since we just registered it to the vao
-    // note: this is only allowed for GL_ARRAY_BUFFER, otherwise this would affect the vao state!
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // and we can also unbind the array object, since we finished setting it up
-    glBindVertexArray(0);
-
-    return vao;
 }
 
 void checkProgramCompileSuccess(GLuint program)
