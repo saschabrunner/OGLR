@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+GLuint createTriangleVao(float vertices[]);
 void checkShaderCompileSuccess(GLuint shader);
 void checkProgramCompileSuccess(GLuint program);
 void framebufferSizeCallback(GLFWwindow *window, int widht, int height);
@@ -53,39 +54,20 @@ int main()
     // state setting, call once
     glClearColor(.8f, .3f, .3f, 1.0f);
 
-    // vertices for two triangles making a square
-    GLfloat vertices[] = {
+    // create two triangles with one vao for each
+    GLfloat triangleOne[] = {
         0.25f, 0.5f, 0.0f,
         0.5f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f};
+
+    GLuint vaoOne = createTriangleVao(triangleOne);
+
+    GLfloat triangleTwo[] = {
         0.0f, 0.0f, 0.0f,
         -0.25f, 0.5f, 0.0f,
         -0.5f, 0.0f, 0.0f};
 
-    // vertex array object
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    // vertex buffer object
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
-    // note: glBindBuffer does not affect the vao when binding to GL_ARRAY_BUFFER!
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-    // copy vertex data into buffer
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    // tell OpenGL how to interpret vertex data and enable it as the first attribute
-    // only after this call will the bound vao be modified!
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
-    glEnableVertexAttribArray(0);
-
-    // we can unbind the buffer, since we just registered it to the vao
-    // note: this is only allowed for GL_ARRAY_BUFFER, otherwise this would affect the vao state!
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // and we can also unbind the array object, since we finished setting it up
-    glBindVertexArray(0);
+    GLuint vaoTwo = createTriangleVao(triangleTwo);
 
     // vertex shader
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -120,10 +102,16 @@ int main()
 
         // render triangle with shader program
         glUseProgram(shaderProgram);
-        glBindVertexArray(vao); // technically that's not needed every loop, since this is the only vao we have right now
+
+        // draw the first triangle
+        glBindVertexArray(vaoOne);
         glDrawArrays(GL_TRIANGLES, 0, 3);
-        glDrawArrays(GL_TRIANGLES, 2, 3);
-        glBindVertexArray(0); // technically that's not needed every loop, since this is the only vao we have right now
+        glBindVertexArray(0);
+
+        // draw the second triangle
+        glBindVertexArray(vaoTwo);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindVertexArray(0);
 
         // poll events and swap buffers
         glfwPollEvents();
@@ -132,6 +120,40 @@ int main()
 
     glfwTerminate();
     return 0;
+}
+
+/**
+ * vertices is currently expected to have a length of 9!
+ */
+GLuint createTriangleVao(GLfloat vertices[])
+{
+    // vertex array object
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    // vertex buffer object
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+    // note: glBindBuffer does not affect the vao when binding to GL_ARRAY_BUFFER!
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+    // copy vertex data into buffer
+    glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), vertices, GL_STATIC_DRAW);
+
+    // tell OpenGL how to interpret vertex data and enable it as the first attribute
+    // only after this call will the bound vao be modified!
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    // we can unbind the buffer, since we just registered it to the vao
+    // note: this is only allowed for GL_ARRAY_BUFFER, otherwise this would affect the vao state!
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // and we can also unbind the array object, since we finished setting it up
+    glBindVertexArray(0);
+
+    return vao;
 }
 
 void checkProgramCompileSuccess(GLuint program)
