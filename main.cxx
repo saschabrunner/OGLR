@@ -65,10 +65,6 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)0);
     glEnableVertexAttribArray(0);
 
-    // color attribute (location = 1)
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-
     // we can unbind the buffer, since we just registered it to the vao
     // note: this is only allowed for GL_ARRAY_BUFFER, otherwise this would affect the vao state!
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -78,7 +74,7 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader shaderProgram("../shaders/offset.vert", "../shaders/vertColor.frag");
+    Shader shaderProgram("../shaders/position.vert", "../shaders/vertColor.frag");
     shaderProgram.setFloat3("offset", .25f, .55f, 0.0f);
 
     while (!glfwWindowShouldClose(window))
