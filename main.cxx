@@ -3,33 +3,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-GLuint createShaderProgram(const char *vertexShaderSource, const char *fragmentShaderSource);
-void checkShaderCompileSuccess(GLuint shader);
-void checkProgramCompileSuccess(GLuint program);
+#include "Shader.h"
+
 void framebufferSizeCallback(GLFWwindow *window, int widht, int height);
 void processInput(GLFWwindow *window);
-
-const char *vertexShaderSource = "#version 330 core\n"
-                                 "layout (location = 0) in vec3 pos;\n"
-                                 "layout (location = 1) in vec3 color;\n"
-                                 "\n"
-                                 "out vec3 vertexColor;"
-                                 "\n"
-                                 "void main()\n"
-                                 "{\n"
-                                 "    gl_Position = vec4(pos, 1.0);\n"
-                                 "    vertexColor = color;"
-                                 "}\0";
-
-const char *fragmentShaderSource = "#version 330 core\n"
-                                   "in vec3 vertexColor;\n"
-                                   "\n"
-                                   "out vec4 color;\n"
-                                   "\n"
-                                   "void main()\n"
-                                   "{\n"
-                                   "    color = vec4(vertexColor, 1.0);\n"
-                                   "}\0";
 
 int main()
 {
@@ -84,11 +61,11 @@ int main()
     // copy vertex data into buffer
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // position attribute
+    // position attribute (location = 0)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)0);
     glEnableVertexAttribArray(0);
 
-    // color attribute
+    // color attribute (location = 1)
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
@@ -99,8 +76,9 @@ int main()
     // and we can also unbind the array object, since we finished setting it up
     glBindVertexArray(0);
 
-    // create shader programs and link shaders
-    GLuint shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
+    // create shader program
+    // note: path assumes that binary is in a subfolder of the project (bin/)
+    Shader shaderProgram("../shaders/simple.vert", "../shaders/vertColor.frag");
 
     while (!glfwWindowShouldClose(window))
     {
@@ -111,7 +89,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT); // state using, uses the clearColor set earlier
 
         // use our shader program
-        glUseProgram(shaderProgram);
+        shaderProgram.use();
 
         // draw the triangle
         glBindVertexArray(vao);
@@ -125,63 +103,6 @@ int main()
 
     glfwTerminate();
     return 0;
-}
-
-GLuint createShaderProgram(const char *vertexShaderSource, const char *fragmentShaderSource)
-{
-    // vertex shader
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    checkShaderCompileSuccess(vertexShader);
-
-    // fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    checkShaderCompileSuccess(fragmentShader);
-
-    // create shader program and link shaders
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    checkProgramCompileSuccess(shaderProgram);
-
-    // delete shaders that have been linked to a program
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    return shaderProgram;
-}
-
-void checkProgramCompileSuccess(GLuint program)
-{
-    GLint success;
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-
-    if (!success)
-    {
-        char infoLog[512];
-        glGetProgramInfoLog(program, 512, NULL, infoLog);
-        std::cout << "Program compilation failed\n"
-                  << success
-                  << infoLog << std::endl;
-    }
-}
-
-void checkShaderCompileSuccess(GLuint shader)
-{
-    GLint success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (!success)
-    {
-        char infoLog[512];
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cout << "Shader compilation failed\n"
-                  << infoLog << std::endl;
-    }
 }
 
 void framebufferSizeCallback(GLFWwindow *window, int width, int height)
