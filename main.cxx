@@ -3,6 +3,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include "Shader.h"
 
 void framebufferSizeCallback(GLFWwindow *window, int widht, int height);
@@ -40,12 +43,42 @@ int main()
     // create two triangles with one vao for each
     // clang-format off
     GLfloat vertices[] = {
-        // positions            colors
-         0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   // bottom left
-         0.0f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f    // top
+        // positions            colors              texture coords
+         0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // top left
+         0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top right
+    };
+
+    GLuint indices[] = {
+        0, 1, 2,    // first triangle
+        0, 2, 3     // second triangle
     };
     // clang-format on
+
+    // read image into byte array
+    int width, height, nrChannels;
+    unsigned char *textureData = stbi_load("../textures/container.jpg", &width, &height, &nrChannels, 0);
+
+    // create texture
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // set texture attributes (repeat and use linear filtering)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // copy texture data
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
+
+    // let OpenGL generate mipmaps for us
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    // free the texture data again
+    stbi_image_free(textureData);
 
     // vertex array object
     GLuint vao;
@@ -62,20 +95,32 @@ int main()
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // position attribute (location = 0)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void *)0);
     glEnableVertexAttribArray(0);
+
+    // color attribute (location = 1)
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
+    // texture coordinate attribute (location = 2)
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void *)(6 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(2);
 
     // we can unbind the buffer, since we just registered it to the vao
     // note: this is only allowed for GL_ARRAY_BUFFER, otherwise this would affect the vao state!
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    GLuint ebo;
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // and we can also unbind the array object, since we finished setting it up
     glBindVertexArray(0);
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader shaderProgram("../shaders/position.vert", "../shaders/vertColor.frag");
-    shaderProgram.setFloat3("offset", .25f, .55f, 0.0f);
+    Shader shaderProgram("../shaders/simpleTexCoord.vert", "../shaders/coloredTexture.frag");
 
     while (!glfwWindowShouldClose(window))
     {
@@ -89,8 +134,9 @@ int main()
         shaderProgram.use();
 
         // draw the triangle
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         // poll events and swap buffers
