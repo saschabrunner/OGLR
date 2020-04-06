@@ -78,7 +78,8 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader shaderProgram("../shaders/upsideDown.vert", "../shaders/vertColor.frag");
+    Shader shaderProgram("../shaders/offset.vert", "../shaders/vertColor.frag");
+    shaderProgram.setFloat3("offset", .25f, .55f, 0.0f);
 
     while (!glfwWindowShouldClose(window))
     {
