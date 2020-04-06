@@ -78,7 +78,7 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader shaderProgram("../shaders/simple.vert", "../shaders/vertColor.frag");
+    Shader shaderProgram("../shaders/upsideDown.vert", "../shaders/vertColor.frag");
 
     while (!glfwWindowShouldClose(window))
     {
