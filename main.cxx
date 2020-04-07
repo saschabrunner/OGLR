@@ -45,10 +45,10 @@ int main()
     // clang-format off
     GLfloat vertices[] = {
         // positions            colors              texture coords
-         0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   2.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   0.0f, 0.0f, // bottom left
-        -0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,   0.0f, 2.0f, // top left
-         0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 0.0f,   2.0f, 2.0f  // top right
+         0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   0.55f, 0.45f, // bottom right
+        -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   0.45f, 0.45f, // bottom left
+        -0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,   0.45f, 0.55f, // top left
+         0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 0.0f,   0.55f, 0.55f  // top right
     };
 
     GLuint indices[] = {
@@ -58,7 +58,7 @@ int main()
     // clang-format on
 
     // create textures
-    GLuint texture1 = createTexture("../textures/container.jpg", GL_TEXTURE0, GL_RGB, GL_CLAMP_TO_EDGE);
+    GLuint texture1 = createTexture("../textures/container.jpg", GL_TEXTURE0, GL_RGB, GL_REPEAT);
     GLuint texture2 = createTexture("../textures/awesomeface.png", GL_TEXTURE1, GL_RGBA, GL_REPEAT);
 
     // vertex array object
@@ -163,7 +163,7 @@ GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format, GLi
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrappingMode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappingMode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // copy texture data
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, textureData);
