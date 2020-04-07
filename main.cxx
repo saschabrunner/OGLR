@@ -138,6 +138,9 @@ int main()
 
 GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format)
 {
+    // make sure the image is loaded in a way that represents OpenGL texture coordinates
+    stbi_set_flip_vertically_on_load(true);
+
     // read image into byte array
     int width, height, nrChannels;
     unsigned char *textureData = stbi_load(path, &width, &height, &nrChannels, 0);
