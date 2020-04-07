@@ -8,6 +8,7 @@
 
 #include "Shader.h"
 
+GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format);
 void framebufferSizeCallback(GLFWwindow *window, int widht, int height);
 void processInput(GLFWwindow *window);
 
@@ -44,10 +45,10 @@ int main()
     // clang-format off
     GLfloat vertices[] = {
         // positions            colors              texture coords
-         0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // bottom right
-        -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom left
-        -0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // top left
-         0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top right
+         0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,   0.0f, 1.0f, // top left
+         0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 0.0f,   1.0f, 1.0f  // top right
     };
 
     GLuint indices[] = {
@@ -56,29 +57,9 @@ int main()
     };
     // clang-format on
 
-    // read image into byte array
-    int width, height, nrChannels;
-    unsigned char *textureData = stbi_load("../textures/container.jpg", &width, &height, &nrChannels, 0);
-
-    // create texture
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    // set texture attributes (repeat and use linear filtering)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // copy texture data
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-
-    // let OpenGL generate mipmaps for us
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    // free the texture data again
-    stbi_image_free(textureData);
+    // create textures
+    GLuint texture1 = createTexture("../textures/container.jpg", GL_TEXTURE0, GL_RGB);
+    GLuint texture2 = createTexture("../textures/awesomeface.png", GL_TEXTURE1, GL_RGBA);
 
     // vertex array object
     GLuint vao;
@@ -120,7 +101,9 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader shaderProgram("../shaders/simpleTexCoord.vert", "../shaders/coloredTexture.frag");
+    Shader shaderProgram("../shaders/simpleTexCoord.vert", "../shaders/mixTextures.frag");
+    shaderProgram.setInt1("texture1", 0);
+    shaderProgram.setInt1("texture2", 1);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -133,8 +116,13 @@ int main()
         // use our shader program
         shaderProgram.use();
 
-        // draw the triangle
-        glBindTexture(GL_TEXTURE_2D, texture);
+        // activate and bind textures
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+
+        // draw
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
@@ -146,6 +134,44 @@ int main()
 
     glfwTerminate();
     return 0;
+}
+
+GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format)
+{
+    // read image into byte array
+    int width, height, nrChannels;
+    unsigned char *textureData = stbi_load(path, &width, &height, &nrChannels, 0);
+
+    if (!textureData)
+    {
+        std::cerr << "Could not read texture from '" << path << "'" << std::endl;
+        return -1;
+    }
+
+    // create texture
+    GLuint texture;
+    glGenTextures(1, &texture);
+
+    // activate first texture unit and bind texture to it
+    glActiveTexture(glTextureIndex);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // set texture attributes (repeat and use linear filtering)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // copy texture data
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, textureData);
+
+    // let OpenGL generate mipmaps for us
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    // free the texture data again
+    stbi_image_free(textureData);
+
+    return texture;
 }
 
 void framebufferSizeCallback(GLFWwindow *window, int width, int height)
