@@ -8,7 +8,7 @@
 
 #include "Shader.h"
 
-GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format);
+GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format, GLint wrappingMode);
 void framebufferSizeCallback(GLFWwindow *window, int widht, int height);
 void processInput(GLFWwindow *window);
 
@@ -45,10 +45,10 @@ int main()
     // clang-format off
     GLfloat vertices[] = {
         // positions            colors              texture coords
-         0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   1.0f, 0.0f, // bottom right
+         0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   2.0f, 0.0f, // bottom right
         -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   0.0f, 0.0f, // bottom left
-        -0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,   0.0f, 1.0f, // top left
-         0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 0.0f,   1.0f, 1.0f  // top right
+        -0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,   0.0f, 2.0f, // top left
+         0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 0.0f,   2.0f, 2.0f  // top right
     };
 
     GLuint indices[] = {
@@ -58,8 +58,8 @@ int main()
     // clang-format on
 
     // create textures
-    GLuint texture1 = createTexture("../textures/container.jpg", GL_TEXTURE0, GL_RGB);
-    GLuint texture2 = createTexture("../textures/awesomeface.png", GL_TEXTURE1, GL_RGBA);
+    GLuint texture1 = createTexture("../textures/container.jpg", GL_TEXTURE0, GL_RGB, GL_CLAMP_TO_EDGE);
+    GLuint texture2 = createTexture("../textures/awesomeface.png", GL_TEXTURE1, GL_RGBA, GL_REPEAT);
 
     // vertex array object
     GLuint vao;
@@ -136,7 +136,7 @@ int main()
     return 0;
 }
 
-GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format)
+GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format, GLint wrappingMode)
 {
     // make sure the image is loaded in a way that represents OpenGL texture coordinates
     stbi_set_flip_vertically_on_load(true);
@@ -160,8 +160,8 @@ GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format)
     glBindTexture(GL_TEXTURE_2D, texture);
 
     // set texture attributes (repeat and use linear filtering)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrappingMode);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappingMode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
