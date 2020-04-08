@@ -71,76 +71,94 @@ void Shader::use() const
 // This might perform better than manually calling glUseProgram before setting uniforms, as below
 // Can be implemented when switching to OpenGL >= 4.1
 
-void Shader::setBool1(const std::string &name, bool v1) const
+void Shader::setBool(const std::string &name, bool v1) const
 {
     use();
-    glUniform1i(glGetUniformLocation(id, name.c_str()), (int)v1);
+    glUniform1i(glGetUniformLocation(id, name.c_str()), static_cast<int>(v1));
 }
 
-void Shader::setInt1(const std::string &name, GLint v1) const
+void Shader::setInt(const std::string &name, GLint v1) const
 {
     use();
     glUniform1i(glGetUniformLocation(id, name.c_str()), v1);
 }
 
-void Shader::setFloat1(const std::string &name, GLfloat v1) const
+void Shader::setFloat(const std::string &name, GLfloat v1) const
 {
     use();
     glUniform1f(glGetUniformLocation(id, name.c_str()), v1);
 }
 
-void Shader::setBool2(const std::string &name, bool v1, bool v2) const
+void Shader::setBool(const std::string &name, bool v1, bool v2) const
 {
     use();
-    glUniform2i(glGetUniformLocation(id, name.c_str()), (int)v1, (int)v2);
+    glUniform2i(glGetUniformLocation(id, name.c_str()), static_cast<int>(v1), static_cast<int>(v2));
 }
 
-void Shader::setInt2(const std::string &name, GLint v1, GLint v2) const
+void Shader::setInt(const std::string &name, GLint v1, GLint v2) const
 {
     use();
     glUniform2i(glGetUniformLocation(id, name.c_str()), v1, v2);
 }
 
-void Shader::setFloat2(const std::string &name, GLfloat v1, GLfloat v2) const
+void Shader::setFloat(const std::string &name, GLfloat v1, GLfloat v2) const
 {
     use();
     glUniform2f(glGetUniformLocation(id, name.c_str()), v1, v2);
 }
 
-void Shader::setBool3(const std::string &name, bool v1, bool v2, bool v3) const
+void Shader::setBool(const std::string &name, bool v1, bool v2, bool v3) const
 {
     use();
-    glUniform3i(glGetUniformLocation(id, name.c_str()), (int)v1, (int)v2, (int)v3);
+    glUniform3i(glGetUniformLocation(id, name.c_str()), static_cast<int>(v1), static_cast<int>(v2), static_cast<int>(v3));
 }
 
-void Shader::setInt3(const std::string &name, GLint v1, GLint v2, GLint v3) const
+void Shader::setInt(const std::string &name, GLint v1, GLint v2, GLint v3) const
 {
     use();
     glUniform3i(glGetUniformLocation(id, name.c_str()), v1, v2, v3);
 }
 
-void Shader::setFloat3(const std::string &name, GLfloat v1, GLfloat v2, GLfloat v3) const
+void Shader::setFloat(const std::string &name, GLfloat v1, GLfloat v2, GLfloat v3) const
 {
     use();
     glUniform3f(glGetUniformLocation(id, name.c_str()), v1, v2, v3);
 }
 
-void Shader::setBool4(const std::string &name, bool v1, bool v2, bool v3, bool v4) const
+void Shader::setBool(const std::string &name, bool v1, bool v2, bool v3, bool v4) const
 {
     use();
-    glUniform4i(glGetUniformLocation(id, name.c_str()), (int)v1, (int)v2, (int)v3, (int)v4);
+    glUniform4i(glGetUniformLocation(id, name.c_str()), static_cast<int>(v1), static_cast<int>(v2), static_cast<int>(v3), static_cast<int>(v4));
 }
 
-void Shader::setInt4(const std::string &name, GLint v1, GLint v2, GLint v3, GLint v4) const
+void Shader::setInt(const std::string &name, GLint v1, GLint v2, GLint v3, GLint v4) const
 {
     use();
     glUniform4i(glGetUniformLocation(id, name.c_str()), v1, v2, v3, v4);
 }
 
-void Shader::setFloat4(const std::string &name, GLfloat v1, GLfloat v2, GLfloat v3, GLfloat v4) const
+void Shader::setFloat(const std::string &name, GLfloat v1, GLfloat v2, GLfloat v3, GLfloat v4) const
 {
     use();
     glUniform4f(glGetUniformLocation(id, name.c_str()), v1, v2, v3, v4);
+}
+
+void Shader::getBool(const std::string &name, bool *result) const
+{
+    use();
+    glGetUniformiv(id, glGetUniformLocation(id, name.c_str()), reinterpret_cast<int *>(result));
+}
+
+void Shader::getInt(const std::string &name, GLint *result) const
+{
+    use();
+    glGetUniformiv(id, glGetUniformLocation(id, name.c_str()), result);
+}
+
+void Shader::getFloat(const std::string &name, GLfloat *result) const
+{
+    use();
+    glGetUniformfv(id, glGetUniformLocation(id, name.c_str()), result);
 }
 
 void Shader::checkProgramLinkSuccess(GLuint program) const

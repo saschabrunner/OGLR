@@ -10,7 +10,7 @@
 
 GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format, GLint wrappingMode);
 void framebufferSizeCallback(GLFWwindow *window, int widht, int height);
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow *window, Shader &shader);
 
 int main()
 {
@@ -45,10 +45,10 @@ int main()
     // clang-format off
     GLfloat vertices[] = {
         // positions            colors              texture coords
-         0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   0.55f, 0.45f, // bottom right
-        -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   0.45f, 0.45f, // bottom left
-        -0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,   0.45f, 0.55f, // top left
-         0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 0.0f,   0.55f, 0.55f  // top right
+         0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,   0.0f, 1.0f, // top left
+         0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 0.0f,   1.0f, 1.0f  // top right
     };
 
     GLuint indices[] = {
@@ -101,20 +101,21 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader shaderProgram("../shaders/simpleTexCoord.vert", "../shaders/mixTextures.frag");
-    shaderProgram.setInt1("texture1", 0);
-    shaderProgram.setInt1("texture2", 1);
+    Shader shaderProgram("../shaders/simpleTexCoord.vert", "../shaders/mixTexturesConfigurable.frag");
+    shaderProgram.setInt("texture1", 0);
+    shaderProgram.setInt("texture2", 1);
+    shaderProgram.setFloat("texture2Opacity", 0.8);
 
     while (!glfwWindowShouldClose(window))
     {
+        // use our shader program
+        shaderProgram.use();
+
         // input
-        processInput(window);
+        processInput(window, shaderProgram);
 
         // render background
         glClear(GL_COLOR_BUFFER_BIT); // state using, uses the clearColor set earlier
-
-        // use our shader program
-        shaderProgram.use();
 
         // activate and bind textures
         glActiveTexture(GL_TEXTURE0);
@@ -163,7 +164,7 @@ GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format, GLi
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrappingMode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappingMode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // copy texture data
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, textureData);
@@ -182,10 +183,32 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow *window, Shader &shader)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, true);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+        GLfloat opacity;
+        shader.getFloat("texture2Opacity", &opacity);
+        if (opacity < 1.0f)
+        {
+            opacity += 0.01f;
+        }
+        shader.setFloat("texture2Opacity", opacity);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    {
+        GLfloat opacity;
+        shader.getFloat("texture2Opacity", &opacity);
+        if (opacity > 0.0f)
+        {
+            opacity -= 0.01f;
+        }
+        shader.setFloat("texture2Opacity", opacity);
     }
 }
