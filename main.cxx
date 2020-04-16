@@ -142,6 +142,15 @@ int main()
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
+        // calculate transformation for second box
+        trans = glm::translate(identityMatrix, glm::vec3(-0.5f, 0.5f, 0.0f));
+        trans = glm::scale(trans, glm::vec3(sin(2 * glfwGetTime()), sin(5 * glfwGetTime()), sin(3 * glfwGetTime())));
+        shaderProgram.setFloat("transform", trans);
+
+        // draw second box
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
         // poll events and swap buffers
         glfwPollEvents();
         glfwSwapBuffers(window);
