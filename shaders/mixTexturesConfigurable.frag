@@ -1,6 +1,5 @@
 #version 330 core
-in vec3 vertexColor;
-in vec2 vertexTexCoord;
+in vec2 textureCoord;
 
 out vec4 color;
 
@@ -10,5 +9,5 @@ uniform float texture2Opacity;
 
 void main()
 {
-    color = mix(texture(texture1, vertexTexCoord), texture(texture2, vertexTexCoord), texture2Opacity);
+    color = mix(texture(texture1, textureCoord), texture(texture2, textureCoord), texture2Opacity);
 }
