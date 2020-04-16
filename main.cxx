@@ -185,6 +185,7 @@ int main()
         glBindTexture(GL_TEXTURE_2D, texture2);
 
         // draw
+        view = glm::translate(identityMatrix, glm::vec3(sin(glfwGetTime() * 50), sin(glfwGetTime() * 37), -3.0f));
         shaderProgram.setFloat("view", view);
         glBindVertexArray(vao);
 
