@@ -1,5 +1,7 @@
 #include "Shader.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 Shader::Shader(const char *vertexShaderPath, const char *fragmentShaderPath)
 {
     // retrieve shader source from file system
@@ -141,6 +143,24 @@ void Shader::setFloat(const std::string &name, GLfloat v1, GLfloat v2, GLfloat v
 {
     use();
     glUniform4f(glGetUniformLocation(id, name.c_str()), v1, v2, v3, v4);
+}
+
+void Shader::setFloat(const std::string &name, glm::mat2 &mat) const
+{
+    use();
+    glUniformMatrix2fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
+}
+
+void Shader::setFloat(const std::string &name, glm::mat3 &mat) const
+{
+    use();
+    glUniformMatrix3fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
+}
+
+void Shader::setFloat(const std::string &name, glm::mat4 &mat) const
+{
+    use();
+    glUniformMatrix4fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
 }
 
 void Shader::getBool(const std::string &name, bool *result) const

@@ -1,9 +1,15 @@
+#define GLFW_INCLUDE_NONE        // Hinder GLFW from including gl headers, since glad does that for us
+#define STB_IMAGE_IMPLEMENTATION // stb_image.h one time initialization
+
 #include <iostream>
 
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#define STB_IMAGE_IMPLEMENTATION
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "glad/glad.h"
 #include "stb_image.h"
 
 #include "Shader.h"
@@ -101,10 +107,13 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader shaderProgram("../shaders/simpleTexCoord.vert", "../shaders/mixTexturesConfigurable.frag");
+    Shader shaderProgram("../shaders/transform.vert", "../shaders/mixTexturesConfigurable.frag");
     shaderProgram.setInt("texture1", 0);
     shaderProgram.setInt("texture2", 1);
-    shaderProgram.setFloat("texture2Opacity", 0.8);
+    shaderProgram.setFloat("texture2Opacity", 0.2);
+
+    // create reusable identity transformation matrix
+    glm::mat4 identityMatrix(1.0f);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -122,6 +131,11 @@ int main()
         glBindTexture(GL_TEXTURE_2D, texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
+
+        // calculate transformation
+        glm::mat4 trans = glm::translate(identityMatrix, glm::vec3(0.5f, -0.5f, 0.0f));
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        shaderProgram.setFloat("transform", trans);
 
         // draw
         glBindVertexArray(vao);
