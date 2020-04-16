@@ -18,6 +18,9 @@ GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format, GLi
 void framebufferSizeCallback(GLFWwindow *window, int widht, int height);
 void processInput(GLFWwindow *window, Shader &shader);
 
+const GLuint SCR_WIDTH = 800;
+const GLuint SCR_HEIGHT = 600;
+
 int main()
 {
     glfwInit();
@@ -25,7 +28,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow *window = glfwCreateWindow(800, 600, "E", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "E", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -42,6 +45,9 @@ int main()
 
     glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+
+    // enable depth testing through z-buffer
+    glEnable(GL_DEPTH_TEST);
 
     // set clear color (background color)
     // state setting, call once
@@ -128,13 +134,6 @@ int main()
     // and we can also unbind the array object, since we finished setting it up
     glBindVertexArray(0);
 
-    // create shader program
-    // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader shaderProgram("../shaders/transformCoordinates.vert", "../shaders/mixTexturesConfigurable.frag");
-    shaderProgram.setInt("texture1", 0);
-    shaderProgram.setInt("texture2", 1);
-    shaderProgram.setFloat("texture2Opacity", 0.2);
-
     // create reusable identity transformation matrix
     glm::mat4 identityMatrix(1.0f);
 
@@ -145,15 +144,21 @@ int main()
     glm::mat4 view = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
 
     // from view to clip space, we use a perspective projection
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)SCR_WIDTH / (GLfloat)SCR_HEIGHT, 0.1f, 100.0f);
+
+    // create shader program
+    // note: path assumes that binary is in a subfolder of the project (bin/)
+    Shader shaderProgram("../shaders/transformCoordinates.vert", "../shaders/mixTexturesConfigurable.frag");
+    shaderProgram.setInt("texture1", 0);
+    shaderProgram.setInt("texture2", 1);
+    shaderProgram.setFloat("texture2Opacity", 0.2);
+    shaderProgram.setFloat("projection", projection); // projection matrix rarely changes, so set it once here
 
     while (!glfwWindowShouldClose(window))
     {
-
-        // set transformation matrices in vertex shader (these would normally change a lot which is why it's done every frame)
+        // set model and view matrices in vertex shader (these normally change a lot which is why it's done every frame)
         shaderProgram.setFloat("model", model);
         shaderProgram.setFloat("view", view);
-        shaderProgram.setFloat("projection", projection);
 
         // use our shader program
         shaderProgram.use();
@@ -162,7 +167,7 @@ int main()
         processInput(window, shaderProgram);
 
         // render background
-        glClear(GL_COLOR_BUFFER_BIT); // state using, uses the clearColor set earlier
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // activate and bind textures
         glActiveTexture(GL_TEXTURE0);
