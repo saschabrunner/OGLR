@@ -107,7 +107,7 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader shaderProgram("../shaders/transform.vert", "../shaders/mixTexturesConfigurable.frag");
+    Shader shaderProgram("../shaders/transformCoordinates.vert", "../shaders/mixTexturesConfigurable.frag");
     shaderProgram.setInt("texture1", 0);
     shaderProgram.setInt("texture2", 1);
     shaderProgram.setFloat("texture2Opacity", 0.2);
@@ -115,8 +115,22 @@ int main()
     // create reusable identity transformation matrix
     glm::mat4 identityMatrix(1.0f);
 
+    // from local to world space, we place the object into the world with a slight rotation to the x-axis
+    glm::mat4 model = glm::rotate(identityMatrix, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    // from world to view space, the camera is positioned a little back
+    glm::mat4 view = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
+
+    // from view to clip space, we use a perspective projection
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+
     while (!glfwWindowShouldClose(window))
     {
+        // set transformation matrices in vertex shader (these would normally change a lot which is why it's done every frame)
+        shaderProgram.setFloat("model", model);
+        shaderProgram.setFloat("view", view);
+        shaderProgram.setFloat("projection", projection);
+
         // use our shader program
         shaderProgram.use();
 
@@ -139,15 +153,6 @@ int main()
 
         // draw
         glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-
-        // calculate transformation for second box
-        trans = glm::translate(identityMatrix, glm::vec3(-0.5f, 0.5f, 0.0f));
-        trans = glm::scale(trans, glm::vec3(sin(2 * glfwGetTime()), sin(5 * glfwGetTime()), sin(3 * glfwGetTime())));
-        shaderProgram.setFloat("transform", trans);
-
-        // draw second box
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
