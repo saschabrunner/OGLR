@@ -99,6 +99,19 @@ int main()
         -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,
         -0.5f,  0.5f, -0.5f,    0.0f, 1.0f
     };
+
+    glm::vec3 cubePositions[] = {
+        glm::vec3( 0.0f,  0.0f,  0.0f),
+        glm::vec3( 2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3( 2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3( 1.3f, -2.0f, -2.5f),
+        glm::vec3( 1.5f,  2.0f, -2.5f),
+        glm::vec3( 1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
     // clang-format on
 
     // create textures
@@ -156,10 +169,6 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
-        // set model and view matrices in vertex shader (these normally change a lot which is why it's done every frame)
-        shaderProgram.setFloat("model", model);
-        shaderProgram.setFloat("view", view);
-
         // use our shader program
         shaderProgram.use();
 
@@ -175,12 +184,19 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
-        // calculate transformation (rotate the cube by placing the cube differently in world space)
-        model = glm::rotate(identityMatrix, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-
         // draw
+        shaderProgram.setFloat("view", view);
         glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        for (int i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); i++)
+        {
+            model = glm::translate(identityMatrix, cubePositions[i]);
+            model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
+            shaderProgram.setFloat("model", model);
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+
         glBindVertexArray(0);
 
         // poll events and swap buffers
