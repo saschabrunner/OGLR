@@ -123,7 +123,7 @@ int main()
 
     // create textures
     GLuint texture1 = createTexture("../textures/container.jpg", GL_TEXTURE0, GL_RGB, GL_REPEAT);
-    GLuint texture2 = createTexture("../textures/awesomeface.png", GL_TEXTURE1, GL_RGBA, GL_REPEAT);
+    GLuint texture2 = createTexture("../textures/ears.png", GL_TEXTURE1, GL_RGBA, GL_REPEAT);
 
     // vertex array object
     GLuint vao;

@@ -9,5 +9,7 @@ uniform float texture2Opacity;
 
 void main()
 {
-    color = mix(texture(texture1, textureCoord), texture(texture2, textureCoord), texture2Opacity);
+    vec4 texel1 = texture(texture1, textureCoord);
+    vec4 texel2 = texture(texture2, textureCoord);
+    color = mix(texel1, texel2, texel2.a * texture2Opacity);
 }
