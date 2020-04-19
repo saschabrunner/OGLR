@@ -184,8 +184,25 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
+        // calculate new view (make camera rotate around in a circle)
+        const float radius = 10.0f;
+        float camX = cos(glfwGetTime()) * radius;
+        float camZ = sin(glfwGetTime()) * radius;
+        // the view transformation matrice is calculated by
+        // 1. subtracting the target vector we're looking at from the camera position (cameraPos - cameraTarget)
+        //      this will result in a vector that points in the opposite direction of where the camera is pointing at
+        // 2. calculating the cross product of the direction vector from step 1. and a vector pointing straight up in world space
+        //      this will result in a vector that's orthogonal to both input vectors, which happens to be the right axis of the camera
+        // 3. calculating the cross product of the direction vector from step 1. and the right axis vector from step 2.
+        //      this will result in another vector orthogonal to both inputs, which is the up axis of the camera
+        // 4. calculate the view matrice by putting the camera directions in a rotation matrice and multiplying it with a
+        //    translation matrice (lookAt = rotation x translation) - note the order of the multiplication is different!
+        // glm::lookAt will do all of that for us, by just providing the initial three vectors: camera position, target, up
+        view = glm::lookAt(glm::vec3(camX, 0.0, camZ), // the position of the camera
+                           glm::vec3(0.0, 0.0, 0.0),   // the position of what the camera is looking at
+                           glm::vec3(0.0, 1.0, 0.0));  // vector pointing up in world space
+
         // draw
-        view = glm::translate(identityMatrix, glm::vec3(sin(glfwGetTime() * 50), sin(glfwGetTime() * 37), -3.0f));
         shaderProgram.setFloat("view", view);
         glBindVertexArray(vao);
 
