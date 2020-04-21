@@ -17,6 +17,8 @@
 // prototypes
 GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format, GLint wrappingMode);
 void framebufferSizeCallback(GLFWwindow *window, int widht, int height);
+void mouseCallback(GLFWwindow *window, double xPos, double yPos);
+void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
 void processInput(GLFWwindow *window, Shader &shader);
 
 // settings
@@ -27,6 +29,18 @@ const GLuint SCR_HEIGHT = 600;
 glm::vec3 cameraPos(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
+float pitch = 0.0f;
+float yaw = -90.0f;
+float fov = 45.0f;
+
+// mouse
+bool firstMouse = true;
+float lastX;
+float lastY;
+
+// time
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
 
 int main()
 {
@@ -52,6 +66,10 @@ int main()
 
     glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);
 
     // enable depth testing through z-buffer
     glEnable(GL_DEPTH_TEST);
@@ -164,7 +182,7 @@ int main()
     glm::mat4 view = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
 
     // from view to clip space, we use a perspective projection
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)SCR_WIDTH / (GLfloat)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(fov), (GLfloat)SCR_WIDTH / (GLfloat)SCR_HEIGHT, 0.1f, 100.0f);
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
@@ -172,10 +190,14 @@ int main()
     shaderProgram.setInt("texture1", 0);
     shaderProgram.setInt("texture2", 1);
     shaderProgram.setFloat("texture2Opacity", 0.2);
-    shaderProgram.setFloat("projection", projection); // projection matrix rarely changes, so set it once here
 
     while (!glfwWindowShouldClose(window))
     {
+        // keep record of time
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         // use our shader program
         shaderProgram.use();
 
@@ -204,8 +226,12 @@ int main()
         // glm::lookAt will do all of that for us, by just providing the initial three vectors: camera position, target, up
         view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
+        // calculate the new projection, in case FOV changes
+        projection = glm::perspective(glm::radians(fov), (GLfloat)SCR_WIDTH / (GLfloat)SCR_HEIGHT, 0.1f, 100.0f);
+
         // draw
         shaderProgram.setFloat("view", view);
+        shaderProgram.setFloat("projection", projection);
         glBindVertexArray(vao);
 
         for (int i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); i++)
@@ -274,6 +300,58 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+void mouseCallback(GLFWwindow *window, double xPos, double yPos)
+{
+    if (firstMouse)
+    {
+        lastX = xPos;
+        lastY = yPos;
+        firstMouse = false;
+    }
+
+    float xOffset = xPos - lastX;
+    float yOffset = yPos - lastY;
+    lastX = xPos;
+    lastY = yPos;
+
+    const float sensitivity = 0.05f;
+    xOffset *= sensitivity;
+    yOffset *= sensitivity;
+
+    yaw += xOffset;
+    pitch -= yOffset; // I don't like inverted controls
+
+    // constrain pitch
+    if (pitch > 89.0f)
+    {
+        pitch = 89.0f;
+    }
+    else if (pitch < -89.0f)
+    {
+        pitch = -89.0f;
+    }
+
+    // calculate camera direction vector
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(direction);
+}
+
+void scrollCallback(GLFWwindow *window, double xOffset, double yOffset)
+{
+    fov += yOffset;
+    if (fov <= 1.0f)
+    {
+        fov = 1.0f;
+    }
+    else if (fov >= 90.0f)
+    {
+        fov = 90.0f;
+    }
+}
+
 void processInput(GLFWwindow *window, Shader &shader)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -303,26 +381,28 @@ void processInput(GLFWwindow *window, Shader &shader)
         shader.setFloat("texture2Opacity", opacity);
     }
 
-    const float cameraSpeed = 0.05f;
+    // Movements will be constantly interrupted, because key state changes from GLFW_PRESS to GLFW_REPEAT
+    // TODO: Store button states, for when they're held down or switch to event based input handling
+    const float cameraSpeed = 2.5f;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
-        cameraPos += cameraSpeed * cameraFront;
+        cameraPos += cameraSpeed * deltaTime * cameraFront;
     }
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
-        cameraPos -= cameraSpeed * cameraFront;
+        cameraPos -= cameraSpeed * deltaTime * cameraFront;
     }
 
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
         // normalize the cross product so that movement speed is not dependent on cameraFront which changes with rotation
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * deltaTime;
     }
 
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
         // normalize the cross product so that movement speed is not dependent on cameraFront which changes with rotation
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * deltaTime;
     }
 }
