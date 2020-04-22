@@ -12,35 +12,28 @@
 #include "glad/glad.h"
 #include "stb_image.h"
 
+#include "Camera.h"
 #include "Shader.h"
 
 // prototypes
 GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format, GLint wrappingMode);
-void framebufferSizeCallback(GLFWwindow *window, int widht, int height);
+void framebufferSizeCallback(GLFWwindow *window, int width, int height);
 void mouseCallback(GLFWwindow *window, double xPos, double yPos);
 void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
 void processInput(GLFWwindow *window, Shader &shader);
 
 // settings
-const GLuint SCR_WIDTH = 800;
-const GLuint SCR_HEIGHT = 600;
-
-// camera
-glm::vec3 cameraPos(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
-float pitch = 0.0f;
-float yaw = -90.0f;
-float fov = 45.0f;
-
-// mouse
-bool firstMouse = true;
-float lastX;
-float lastY;
+const GLuint DEFAULT_WIDTH = 800;
+const GLuint DEFAULT_HEIGHT = 600;
 
 // time
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+GLuint curWidth = DEFAULT_WIDTH;
+GLuint curHeight = DEFAULT_HEIGHT;
+
+Camera camera;
 
 int main()
 {
@@ -49,7 +42,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "E", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, "E", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -182,7 +175,7 @@ int main()
     glm::mat4 view = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
 
     // from view to clip space, we use a perspective projection
-    glm::mat4 projection = glm::perspective(glm::radians(fov), (GLfloat)SCR_WIDTH / (GLfloat)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), (GLfloat)curWidth / (GLfloat)curHeight, 0.1f, 100.0f);
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
@@ -213,21 +206,9 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
-        // calculate new view
-        // the view transformation matrix is calculated by
-        // 1. subtracting the target vector we're looking at from the camera position (cameraPos - cameraTarget)
-        //      this will result in a vector that points in the opposite direction of where the camera is pointing at
-        // 2. calculating the cross product of the direction vector from step 1. and a vector pointing straight up in world space
-        //      this will result in a vector that's orthogonal to both input vectors, which happens to be the right axis of the camera
-        // 3. calculating the cross product of the direction vector from step 1. and the right axis vector from step 2.
-        //      this will result in another vector orthogonal to both inputs, which is the up axis of the camera
-        // 4. calculate the view matrix by putting the camera directions in a rotation matrix and multiplying it with a
-        //    translation matrix (lookAt = rotation x translation) - note the order of the multiplication is different!
-        // glm::lookAt will do all of that for us, by just providing the initial three vectors: camera position, target, up
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-
-        // calculate the new projection, in case FOV changes
-        projection = glm::perspective(glm::radians(fov), (GLfloat)SCR_WIDTH / (GLfloat)SCR_HEIGHT, 0.1f, 100.0f);
+        // calculate new view and projection
+        view = camera.calculateView();
+        projection = glm::perspective(glm::radians(camera.getFov()), (GLfloat)curWidth / (GLfloat)curHeight, 0.1f, 100.0f);
 
         // draw
         shaderProgram.setFloat("view", view);
@@ -297,59 +278,19 @@ GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format, GLi
 
 void framebufferSizeCallback(GLFWwindow *window, int width, int height)
 {
+    curWidth = width;
+    curHeight = height;
     glViewport(0, 0, width, height);
 }
 
 void mouseCallback(GLFWwindow *window, double xPos, double yPos)
 {
-    if (firstMouse)
-    {
-        lastX = xPos;
-        lastY = yPos;
-        firstMouse = false;
-    }
-
-    float xOffset = xPos - lastX;
-    float yOffset = yPos - lastY;
-    lastX = xPos;
-    lastY = yPos;
-
-    const float sensitivity = 0.05f;
-    xOffset *= sensitivity;
-    yOffset *= sensitivity;
-
-    yaw += xOffset;
-    pitch -= yOffset; // I don't like inverted controls
-
-    // constrain pitch
-    if (pitch > 89.0f)
-    {
-        pitch = 89.0f;
-    }
-    else if (pitch < -89.0f)
-    {
-        pitch = -89.0f;
-    }
-
-    // calculate camera direction vector
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction);
+    camera.rotate(xPos, yPos);
 }
 
 void scrollCallback(GLFWwindow *window, double xOffset, double yOffset)
 {
-    fov += yOffset;
-    if (fov <= 1.0f)
-    {
-        fov = 1.0f;
-    }
-    else if (fov >= 90.0f)
-    {
-        fov = 90.0f;
-    }
+    camera.zoom(yOffset);
 }
 
 void processInput(GLFWwindow *window, Shader &shader)
@@ -383,26 +324,23 @@ void processInput(GLFWwindow *window, Shader &shader)
 
     // Movements will be constantly interrupted, because key state changes from GLFW_PRESS to GLFW_REPEAT
     // TODO: Store button states, for when they're held down or switch to event based input handling
-    const float cameraSpeed = 2.5f;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
-        cameraPos += cameraSpeed * deltaTime * cameraFront;
+        camera.move(FORWARD, deltaTime);
     }
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
-        cameraPos -= cameraSpeed * deltaTime * cameraFront;
+        camera.move(BACKWARD, deltaTime);
     }
 
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
-        // normalize the cross product so that movement speed is not dependent on cameraFront which changes with rotation
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * deltaTime;
+        camera.move(LEFT, deltaTime);
     }
 
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
-        // normalize the cross product so that movement speed is not dependent on cameraFront which changes with rotation
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * deltaTime;
+        camera.move(RIGHT, deltaTime);
     }
 }
