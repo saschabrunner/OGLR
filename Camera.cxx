@@ -123,27 +123,37 @@ void Camera::rotate(float xPos, float yPos)
 
 void Camera::move(CameraDirection direction, float deltaTime)
 {
+    moveInternal(front, direction, deltaTime);
+}
+
+void Camera::moveInternal(const glm::vec3 &forward, CameraDirection direction, float deltaTime)
+{
     if (direction == FORWARD)
     {
-        position += speed * deltaTime * front;
+        position += speed * deltaTime * forward;
     }
     else if (direction == BACKWARD)
     {
-        position -= speed * deltaTime * front;
+        position -= speed * deltaTime * forward;
     }
     else if (direction == LEFT)
     {
-        // normalize the cross product so that movement speed is not dependent on cameraFront which changes with rotation
-        position -= glm::normalize(glm::cross(front, up)) * speed * deltaTime;
+        // normalize the cross product so that movement speed is not dependent on forward which changes with rotation
+        position -= glm::normalize(glm::cross(forward, up)) * speed * deltaTime;
     }
     else if (direction == RIGHT)
     {
-        // normalize the cross product so that movement speed is not dependent on cameraFront which changes with rotation
-        position += glm::normalize(glm::cross(front, up)) * speed * deltaTime;
+        // normalize the cross product so that movement speed is not dependent on forward which changes with rotation
+        position += glm::normalize(glm::cross(forward, up)) * speed * deltaTime;
     }
 }
 
 float Camera::getFov() const
 {
     return fov;
+}
+
+const glm::vec3 &Camera::getFront() const
+{
+    return front;
 }
