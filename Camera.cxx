@@ -2,20 +2,54 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-Camera::Camera()
+Camera::Camera(glm::vec3 position,
+               glm::vec3 up,
+               float pitch,
+               float yaw,
+               float fov,
+               float sensitivity,
+               float speed,
+               float invertVertical)
+    : position(position),
+      up(up),
+      front(glm::vec3(0.0f, 0.0f, -1.0f)),
+      pitch(pitch),
+      yaw(yaw),
+      fov(fov),
+      sensitivity(sensitivity),
+      speed(speed),
+      invertVertical(invertVertical)
 {
-    cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-    cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-    cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    pitch = 0.0f;
-    yaw = -90.0f;
-    fov = 45.0f;
     isFirstMove = true;
     lastX = 0.0f;
     lastY = 0.0f;
-    sensitivity = 0.05f;
-    speed = 2.5f;
-    invertVertical = false;
+}
+
+Camera::Camera(float posX,
+               float posY,
+               float posZ,
+               float upX,
+               float upY,
+               float upZ,
+               float pitch,
+               float yaw,
+               float fov,
+               float sensitivity,
+               float speed,
+               float invertVertical)
+    : position(glm::vec3(posX, posY, posZ)),
+      up(glm::vec3(upX, upY, upZ)),
+      front(glm::vec3(0.0f, 0.0f, -1.0f)),
+      pitch(pitch),
+      yaw(yaw),
+      fov(fov),
+      sensitivity(sensitivity),
+      speed(speed),
+      invertVertical(invertVertical)
+{
+    isFirstMove = true;
+    lastX = 0.0f;
+    lastY = 0.0f;
 }
 
 glm::mat4 Camera::calculateView() const
@@ -30,7 +64,7 @@ glm::mat4 Camera::calculateView() const
     // 4. calculate the view matrix by putting the camera directions in a rotation matrix and multiplying it with a
     //    translation matrix (lookAt = rotation x translation) - note the order of the multiplication is different!
     // glm::lookAt will do all of that for us, by just providing the initial three vectors: camera position, target, up
-    return glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    return glm::lookAt(position, position + front, up);
 }
 
 void Camera::zoom(float yOffset)
@@ -84,28 +118,28 @@ void Camera::rotate(float xPos, float yPos)
     direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
     direction.y = sin(glm::radians(pitch));
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction);
+    front = glm::normalize(direction);
 }
 
 void Camera::move(CameraDirection direction, float deltaTime)
 {
     if (direction == FORWARD)
     {
-        cameraPos += speed * deltaTime * cameraFront;
+        position += speed * deltaTime * front;
     }
     else if (direction == BACKWARD)
     {
-        cameraPos -= speed * deltaTime * cameraFront;
+        position -= speed * deltaTime * front;
     }
     else if (direction == LEFT)
     {
         // normalize the cross product so that movement speed is not dependent on cameraFront which changes with rotation
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * speed * deltaTime;
+        position -= glm::normalize(glm::cross(front, up)) * speed * deltaTime;
     }
     else if (direction == RIGHT)
     {
         // normalize the cross product so that movement speed is not dependent on cameraFront which changes with rotation
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * speed * deltaTime;
+        position += glm::normalize(glm::cross(front, up)) * speed * deltaTime;
     }
 }
 
