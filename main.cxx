@@ -12,7 +12,7 @@
 #include "glad/glad.h"
 #include "stb_image.h"
 
-#include "FpsCamera.h"
+#include "Camera.h"
 #include "Shader.h"
 
 // prototypes
@@ -33,7 +33,7 @@ float lastFrame = 0.0f;
 GLuint curWidth = DEFAULT_WIDTH;
 GLuint curHeight = DEFAULT_HEIGHT;
 
-FpsCamera camera = FpsCamera();
+Camera camera;
 
 int main()
 {
