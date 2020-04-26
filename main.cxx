@@ -159,7 +159,7 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/transformCoordinates.vert", "../shaders/basicLighting.frag");
+    Shader lightingShader("../shaders/transformCoordinates.vert", "../shaders/ambientLighting.frag");
     lightingShader.setFloat("objectColor", 1.0f, 0.5f, 0.31f);
     lightingShader.setFloat("lightColor", 1.0f, 1.0f, 1.0f);
 
