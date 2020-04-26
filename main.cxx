@@ -75,48 +75,48 @@ int main()
     // create two triangles with one vao for each
     // clang-format off
     GLfloat vertices[] = {
-        // position             texture coords
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
+        // position           normal
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
 
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
 
-        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
 
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
 
-        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
 
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
     };
     // clang-format on
 
@@ -135,11 +135,11 @@ int main()
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // position attribute (location = 0)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)0);
     glEnableVertexAttribArray(0);
 
-    // texture coordinate attribute (location = 1)
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
+    // normal attribute (location = 1)
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
     // we can unbind the buffer, since we just registered it to the vao
@@ -157,24 +157,26 @@ int main()
     glm::mat4 view;       // from world to view space
     glm::mat4 projection; // from view to clip space
 
+    glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
+
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/transformCoordinates.vert", "../shaders/ambientLighting.frag");
+    Shader lightingShader("../shaders/normal.vert", "../shaders/diffuseLighting.frag");
     lightingShader.setFloat("objectColor", 1.0f, 0.5f, 0.31f);
     lightingShader.setFloat("lightColor", 1.0f, 1.0f, 1.0f);
+    lightingShader.setFloat("lightPosition", lightPosition.x, lightPosition.y, lightPosition.z);
 
     // set up light VAO
     GLuint lightVao;
     glGenVertexArrays(1, &lightVao);
     glBindVertexArray(lightVao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)0);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-    Shader lightSourceShader("../shaders/transformCoordinates.vert", "../shaders/white.frag");
+    Shader lightSourceShader("../shaders/normal.vert", "../shaders/white.frag");
 
     while (!glfwWindowShouldClose(window))
     {
@@ -212,7 +214,7 @@ int main()
 
         // draw light source
         glBindVertexArray(lightVao);
-        model = glm::translate(identityMatrix, lightPos);
+        model = glm::translate(identityMatrix, lightPosition);
         model = glm::scale(model, glm::vec3(0.2f));
         lightSourceShader.setFloat("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
