@@ -14,7 +14,7 @@ Camera::Camera(glm::vec3 position,
                float invertVertical)
     : position(position),
       up(up),
-      front(glm::vec3(0.0f, 0.0f, -1.0f)),
+      front(getFront(pitch, yaw)),
       pitch(pitch),
       yaw(yaw),
       fov(fov),
@@ -41,7 +41,7 @@ Camera::Camera(float posX,
                float invertVertical)
     : position(glm::vec3(posX, posY, posZ)),
       up(glm::vec3(upX, upY, upZ)),
-      front(glm::vec3(0.0f, 0.0f, -1.0f)),
+      front(getFront(pitch, yaw)),
       pitch(pitch),
       yaw(yaw),
       fov(fov),
@@ -155,11 +155,7 @@ void Camera::rotate(float xPos, float yPos)
     }
 
     // calculate camera direction vector
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    front = glm::normalize(direction);
+    front = getFront(pitch, yaw);
 }
 
 void Camera::move(CameraDirection direction, float deltaTime)
@@ -197,4 +193,13 @@ float Camera::getFov() const
 const glm::vec3 &Camera::getFront() const
 {
     return front;
+}
+
+glm::vec3 Camera::getFront(float pitch, float yaw)
+{
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    return glm::normalize(direction);
 }

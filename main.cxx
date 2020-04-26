@@ -20,7 +20,7 @@ GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format, GLi
 void framebufferSizeCallback(GLFWwindow *window, int width, int height);
 void mouseCallback(GLFWwindow *window, double xPos, double yPos);
 void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
-void processInput(GLFWwindow *window, Shader &shader);
+void processInput(GLFWwindow *window);
 
 // settings
 const GLuint DEFAULT_WIDTH = 800;
@@ -33,7 +33,8 @@ float lastFrame = 0.0f;
 GLuint curWidth = DEFAULT_WIDTH;
 GLuint curHeight = DEFAULT_HEIGHT;
 
-Camera camera;
+// camera slightly off to the side and looking down from above
+Camera camera(glm::vec3(1.0f, 1.0f, 6.0f), glm::vec3(0.0f, 1.0f, 0.0f), -10.0f, -100.0f);
 
 int main()
 {
@@ -117,24 +118,7 @@ int main()
         -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,
         -0.5f,  0.5f, -0.5f,    0.0f, 1.0f
     };
-
-    glm::vec3 cubePositions[] = {
-        glm::vec3( 0.0f,  0.0f,  0.0f),
-        glm::vec3( 2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3( 2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3( 1.3f, -2.0f, -2.5f),
-        glm::vec3( 1.5f,  2.0f, -2.5f),
-        glm::vec3( 1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
     // clang-format on
-
-    // create textures
-    GLuint texture1 = createTexture("../textures/container.jpg", GL_TEXTURE0, GL_RGB, GL_REPEAT);
-    GLuint texture2 = createTexture("../textures/ears.png", GL_TEXTURE1, GL_RGBA, GL_REPEAT);
 
     // vertex array object
     GLuint vao;
@@ -168,21 +152,29 @@ int main()
     // create reusable identity transformation matrix
     glm::mat4 identityMatrix(1.0f);
 
-    // from local to world space, we place the object into the world with a slight rotation to the x-axis
-    glm::mat4 model = glm::rotate(identityMatrix, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-    // from world to view space, the camera is positioned a little back
-    glm::mat4 view = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
-
-    // from view to clip space, we use a perspective projection
-    glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), (GLfloat)curWidth / (GLfloat)curHeight, 0.1f, 100.0f);
+    // variables for transformation matrices to convert between the different coordinate spaces
+    glm::mat4 model;      // from local to world space
+    glm::mat4 view;       // from world to view space
+    glm::mat4 projection; // from view to clip space
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader shaderProgram("../shaders/transformCoordinates.vert", "../shaders/mixTexturesConfigurable.frag");
-    shaderProgram.setInt("texture1", 0);
-    shaderProgram.setInt("texture2", 1);
-    shaderProgram.setFloat("texture2Opacity", 0.2);
+    Shader lightingShader("../shaders/transformCoordinates.vert", "../shaders/basicLighting.frag");
+    lightingShader.setFloat("objectColor", 1.0f, 0.5f, 0.31f);
+    lightingShader.setFloat("lightColor", 1.0f, 1.0f, 1.0f);
+
+    // set up light VAO
+    GLuint lightVao;
+    glGenVertexArrays(1, &lightVao);
+    glBindVertexArray(lightVao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void *)0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+    Shader lightSourceShader("../shaders/transformCoordinates.vert", "../shaders/white.frag");
 
     while (!glfwWindowShouldClose(window))
     {
@@ -191,39 +183,39 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        // use our shader program
-        shaderProgram.use();
-
         // input
-        processInput(window, shaderProgram);
+        processInput(window);
 
         // render background
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // activate and bind textures
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
 
         // calculate new view and projection
         view = camera.calculateView();
         projection = glm::perspective(glm::radians(camera.getFov()), (GLfloat)curWidth / (GLfloat)curHeight, 0.1f, 100.0f);
 
-        // draw
-        shaderProgram.setFloat("view", view);
-        shaderProgram.setFloat("projection", projection);
+        // update object shader
+        lightingShader.use();
+        lightingShader.setFloat("view", view);
+        lightingShader.setFloat("projection", projection);
+
+        // draw lit object in center
         glBindVertexArray(vao);
+        model = identityMatrix;
+        lightingShader.setFloat("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
 
-        for (int i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); i++)
-        {
-            model = glm::translate(identityMatrix, cubePositions[i]);
-            model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
-            shaderProgram.setFloat("model", model);
+        // update light shader
+        lightSourceShader.use();
+        lightSourceShader.setFloat("view", view);
+        lightSourceShader.setFloat("projection", projection);
 
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-
+        // draw light source
+        glBindVertexArray(lightVao);
+        model = glm::translate(identityMatrix, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f));
+        lightSourceShader.setFloat("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
 
         // poll events and swap buffers
@@ -293,33 +285,11 @@ void scrollCallback(GLFWwindow *window, double xOffset, double yOffset)
     camera.zoom(yOffset);
 }
 
-void processInput(GLFWwindow *window, Shader &shader)
+void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, true);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-    {
-        GLfloat opacity;
-        shader.getFloat("texture2Opacity", &opacity);
-        if (opacity < 1.0f)
-        {
-            opacity += 0.01f;
-        }
-        shader.setFloat("texture2Opacity", opacity);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    {
-        GLfloat opacity;
-        shader.getFloat("texture2Opacity", &opacity);
-        if (opacity > 0.0f)
-        {
-            opacity -= 0.01f;
-        }
-        shader.setFloat("texture2Opacity", opacity);
     }
 
     // Movements will be constantly interrupted, because key state changes from GLFW_PRESS to GLFW_REPEAT

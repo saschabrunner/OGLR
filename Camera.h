@@ -69,6 +69,8 @@ private:
     bool isFirstMove;
     float lastX;
     float lastY;
+
+    static glm::vec3 getFront(float pitch, float yaw);
 };
 
 #endif
