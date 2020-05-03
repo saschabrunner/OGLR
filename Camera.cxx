@@ -190,6 +190,11 @@ float Camera::getFov() const
     return fov;
 }
 
+const glm::vec3 &Camera::getPosition() const
+{
+    return position;
+}
+
 const glm::vec3 &Camera::getFront() const
 {
     return front;

@@ -32,9 +32,12 @@ public:
     void setBool(const std::string &name, bool v1, bool v2, bool v3, bool v4) const;
     void setInt(const std::string &name, GLint v1, GLint v2, GLint v3, GLint v4) const;
     void setFloat(const std::string &name, GLfloat v1, GLfloat v2, GLfloat v3, GLfloat v4) const;
-    void setFloat(const std::string &name, glm::mat2 &mat) const;
-    void setFloat(const std::string &name, glm::mat3 &mat) const;
-    void setFloat(const std::string &name, glm::mat4 &mat) const;
+    void setFloat(const std::string &name, const glm::vec2 &vec) const;
+    void setFloat(const std::string &name, const glm::vec3 &vec) const;
+    void setFloat(const std::string &name, const glm::vec4 &vec) const;
+    void setFloat(const std::string &name, const glm::mat2 &mat) const;
+    void setFloat(const std::string &name, const glm::mat3 &mat) const;
+    void setFloat(const std::string &name, const glm::mat4 &mat) const;
     void getBool(const std::string &name, bool *result) const;
     void getInt(const std::string &name, GLint *result) const;
     void getFloat(const std::string &name, GLfloat *result) const;

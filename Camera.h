@@ -47,6 +47,7 @@ public:
     virtual void move(CameraDirection direction, float deltaTime);
 
     float getFov() const;
+    const glm::vec3 &getPosition() const;
 
 protected:
     const glm::vec3 &getFront() const;

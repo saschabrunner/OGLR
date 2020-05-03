@@ -161,7 +161,7 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/normal.vert", "../shaders/diffuseLighting.frag");
+    Shader lightingShader("../shaders/normalCorrected.vert", "../shaders/specularLighting.frag");
     lightingShader.setFloat("objectColor", 1.0f, 0.5f, 0.31f);
     lightingShader.setFloat("lightColor", 1.0f, 1.0f, 1.0f);
     lightingShader.setFloat("lightPosition", lightPosition.x, lightPosition.y, lightPosition.z);
@@ -199,6 +199,7 @@ int main()
         lightingShader.use();
         lightingShader.setFloat("view", view);
         lightingShader.setFloat("projection", projection);
+        lightingShader.setFloat("viewPosition", camera.getPosition());
 
         // draw lit object in center
         glBindVertexArray(vao);
