@@ -175,7 +175,7 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    Shader lightSourceShader("../shaders/normal.vert", "../shaders/white.frag");
+    Shader lightSourceShader("../shaders/normalCorrected.vert", "../shaders/white.frag");
 
     while (!glfwWindowShouldClose(window))
     {
@@ -195,15 +195,16 @@ int main()
         projection = glm::perspective(glm::radians(camera.getFov()), (GLfloat)curWidth / (GLfloat)curHeight, 0.1f, 100.0f);
 
         // move light dynamically
-        double time = glfwGetTime();
-        lightPosition = glm::vec3(sin(time) * 3, cos(time) * 3, sin(time) * 3 + 1);
+        lightPosition = glm::vec3(sin(currentFrame) * 3.0f, cos(currentFrame) * 3.0f, sin(currentFrame) * 3.0f + 2.0f);
+
+        // calculate light position in view space, for shader
+        glm::vec3 lightViewPosition = glm::vec3(view * glm::vec4(lightPosition, 1.0));
 
         // update object shader
         lightingShader.use();
         lightingShader.setFloat("view", view);
         lightingShader.setFloat("projection", projection);
-        lightingShader.setFloat("viewPosition", camera.getPosition());
-        lightingShader.setFloat("lightPosition", lightPosition.x, lightPosition.y, lightPosition.z);
+        lightingShader.setFloat("lightViewPosition", lightViewPosition);
 
         // draw lit object in center
         glBindVertexArray(vao);

@@ -1,13 +1,12 @@
 #version 330 core
 in vec3 normal;
-in vec3 fragmentWorldPosition;
+in vec3 fragmentViewPosition;
 
 out vec4 color;
 
 uniform vec3 objectColor;
 uniform vec3 lightColor;
-uniform vec3 lightPosition;
-uniform vec3 viewPosition;
+uniform vec3 lightViewPosition;
 
 void main()
 {
@@ -15,12 +14,12 @@ void main()
     vec3 ambient = ambientStrength * lightColor;
 
     vec3 normalizedNormal = normalize(normal);
-    vec3 lightDirection = normalize(lightPosition - fragmentWorldPosition);
+    vec3 lightDirection = normalize(lightViewPosition - fragmentViewPosition);
     float lightAngle = max(dot(normalizedNormal, lightDirection), 0.0); // take max, because value becomes negative if angle is over 90 degrees
     vec3 diffuse = lightAngle * lightColor;
 
     float specularStrength = 0.5;
-    vec3 viewDirection = normalize(viewPosition - fragmentWorldPosition);
+    vec3 viewDirection = normalize(-fragmentViewPosition);
 
     // reflect needs the light direction to be from the light to the fragment, not the other way around so we negate it
     // reflect returns the direction the light reflects, based on the normal and the light direction
