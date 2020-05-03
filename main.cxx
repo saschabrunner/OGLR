@@ -164,7 +164,6 @@ int main()
     Shader lightingShader("../shaders/normalCorrected.vert", "../shaders/specularLighting.frag");
     lightingShader.setFloat("objectColor", 1.0f, 0.5f, 0.31f);
     lightingShader.setFloat("lightColor", 1.0f, 1.0f, 1.0f);
-    lightingShader.setFloat("lightPosition", lightPosition.x, lightPosition.y, lightPosition.z);
 
     // set up light VAO
     GLuint lightVao;
@@ -195,11 +194,16 @@ int main()
         view = camera.calculateView();
         projection = glm::perspective(glm::radians(camera.getFov()), (GLfloat)curWidth / (GLfloat)curHeight, 0.1f, 100.0f);
 
+        // move light dynamically
+        double time = glfwGetTime();
+        lightPosition = glm::vec3(sin(time) * 3, cos(time) * 3, sin(time) * 3 + 1);
+
         // update object shader
         lightingShader.use();
         lightingShader.setFloat("view", view);
         lightingShader.setFloat("projection", projection);
         lightingShader.setFloat("viewPosition", camera.getPosition());
+        lightingShader.setFloat("lightPosition", lightPosition.x, lightPosition.y, lightPosition.z);
 
         // draw lit object in center
         glBindVertexArray(vao);
