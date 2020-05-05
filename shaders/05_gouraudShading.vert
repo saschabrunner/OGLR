@@ -23,7 +23,7 @@ void main()
     // it is needed in case we do non uniform scales, so that the normal vector is perpendicular again
     // hint: for better performance the normal matrix should be passed as a uniform instead,
     //       since inversing a matrix is very expensive
-    vec3 normal = mat3(transpose(inverse(model))) * iNormal;
+    vec3 normal = mat3(transpose(inverse(model * view))) * iNormal;
 
 
     float ambientStrength = 0.1;
