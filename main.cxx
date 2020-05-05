@@ -162,7 +162,6 @@ int main()
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
     Shader lightingShader("../shaders/04_normalCorrected.vert", "../shaders/04_materialLightingIntensity.frag");
-    lightingShader.setFloat("lightColor", 1.0f, 1.0f, 1.0f);
     lightingShader.setFloat("material.ambient", 1.0f, 0.5f, 0.31f);
     lightingShader.setFloat("material.diffuse", 1.0f, 0.5f, 0.31f);
     lightingShader.setFloat("material.specular", 0.5f, 0.5f, 0.5f);
@@ -190,8 +189,12 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
+        std::cout << "frame start " << currentFrame << std::endl;
+
         // input
         processInput(window);
+
+        std::cout << "processed input" << std::endl;
 
         // render background
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -201,16 +204,27 @@ int main()
         projection = glm::perspective(glm::radians(camera.getFov()), (GLfloat)curWidth / (GLfloat)curHeight, 0.1f, 100.0f);
 
         // move light dynamically
-        lightPosition = glm::vec3(sin(currentFrame) * 3.0f, cos(currentFrame) * 3.0f, sin(currentFrame) * 3.0f + 2.0f);
+        lightPosition = glm::vec3(sin(currentFrame) * 3.0f, cos(currentFrame * .9f) * 3.0f, sin(currentFrame * 1.1f) * 3.0f);
 
         // calculate light position in view space, for shader
         glm::vec3 lightViewPosition = glm::vec3(view * glm::vec4(lightPosition, 1.0));
+
+        // change the light color a little bit over time
+        glm::vec3 lightColor(sin(glfwGetTime() * 2.0f), sin(glfwGetTime() * 0.7f), sin(glfwGetTime() * 1.3f));
+        glm::vec3 ambientColor = lightColor * glm::vec3(0.2f);
+        glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+
+        std::cout << "transformations done" << std::endl;
 
         // update object shader
         lightingShader.use();
         lightingShader.setFloat("view", view);
         lightingShader.setFloat("projection", projection);
         lightingShader.setFloat("light.position", lightViewPosition);
+        lightingShader.setFloat("light.ambient", ambientColor);
+        lightingShader.setFloat("light.diffuse", diffuseColor);
+
+        std::cout << "object shader uniforms set" << std::endl;
 
         // draw lit object in center
         glBindVertexArray(vao);
@@ -219,10 +233,14 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
 
+        std::cout << "object drawn" << std::endl;
+
         // update light shader
         lightSourceShader.use();
         lightSourceShader.setFloat("view", view);
         lightSourceShader.setFloat("projection", projection);
+
+        std::cout << "light shader uniforms set" << std::endl;
 
         // draw light source
         glBindVertexArray(lightVao);
@@ -232,10 +250,12 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
 
+        std::cout << "light drawn" << std::endl;
+
         // poll events and swap buffers
         glfwPollEvents();
         glfwSwapBuffers(window);
-        std::cout << currentFrame << std::endl;
+        std::cout << "frame end" << std::endl;
     }
 
     glfwTerminate();
