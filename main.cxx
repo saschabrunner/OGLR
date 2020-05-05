@@ -180,7 +180,8 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    Shader lightSourceShader("../shaders/04_normalCorrected.vert", "../shaders/04_white.frag");
+    Shader lightSourceShader("../shaders/04_normalCorrected.vert", "../shaders/04_color.frag");
+    lightSourceShader.setFloat("iColor", 1.0f, 1.0f, 1.0f);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -239,6 +240,7 @@ int main()
         lightSourceShader.use();
         lightSourceShader.setFloat("view", view);
         lightSourceShader.setFloat("projection", projection);
+        lightSourceShader.setFloat("iColor", lightColor);
 
         std::cout << "light shader uniforms set" << std::endl;
 
