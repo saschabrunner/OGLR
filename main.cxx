@@ -161,9 +161,12 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/05_gouraudShading.vert", "../shaders/01_vertColor.frag");
-    lightingShader.setFloat("objectColor", 1.0f, 0.5f, 0.31f);
+    Shader lightingShader("../shaders/04_normalCorrected.vert", "../shaders/06_materialLighting.frag");
     lightingShader.setFloat("lightColor", 1.0f, 1.0f, 1.0f);
+    lightingShader.setFloat("material.ambient", 1.0f, 0.5f, 0.31f);
+    lightingShader.setFloat("material.diffuse", 1.0f, 0.5f, 0.31f);
+    lightingShader.setFloat("material.specular", 0.5f, 0.5f, 0.5f);
+    lightingShader.setFloat("material.shininess", 32.0f);
 
     // set up light VAO
     GLuint lightVao;
@@ -229,6 +232,7 @@ int main()
         // poll events and swap buffers
         glfwPollEvents();
         glfwSwapBuffers(window);
+        std::cout << currentFrame << std::endl;
     }
 
     glfwTerminate();
