@@ -161,12 +161,15 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/04_normalCorrected.vert", "../shaders/06_materialLighting.frag");
+    Shader lightingShader("../shaders/04_normalCorrected.vert", "../shaders/04_materialLightingIntensity.frag");
     lightingShader.setFloat("lightColor", 1.0f, 1.0f, 1.0f);
     lightingShader.setFloat("material.ambient", 1.0f, 0.5f, 0.31f);
     lightingShader.setFloat("material.diffuse", 1.0f, 0.5f, 0.31f);
     lightingShader.setFloat("material.specular", 0.5f, 0.5f, 0.5f);
     lightingShader.setFloat("material.shininess", 32.0f);
+    lightingShader.setFloat("light.ambient", 0.2f, 0.2f, 0.2f);
+    lightingShader.setFloat("light.diffuse", 0.5f, 0.5f, 0.5f);
+    lightingShader.setFloat("light.specular", 1.0f, 1.0f, 1.0f);
 
     // set up light VAO
     GLuint lightVao;
@@ -207,7 +210,7 @@ int main()
         lightingShader.use();
         lightingShader.setFloat("view", view);
         lightingShader.setFloat("projection", projection);
-        lightingShader.setFloat("lightViewPosition", lightViewPosition);
+        lightingShader.setFloat("light.position", lightViewPosition);
 
         // draw lit object in center
         glBindVertexArray(vao);
