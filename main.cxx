@@ -161,7 +161,7 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/normalCorrected.vert", "../shaders/specularLighting.frag");
+    Shader lightingShader("../shaders/05_gouraudShading.vert", "../shaders/01_vertColor.frag");
     lightingShader.setFloat("objectColor", 1.0f, 0.5f, 0.31f);
     lightingShader.setFloat("lightColor", 1.0f, 1.0f, 1.0f);
 
@@ -175,7 +175,7 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    Shader lightSourceShader("../shaders/normalCorrected.vert", "../shaders/white.frag");
+    Shader lightSourceShader("../shaders/04_normalCorrected.vert", "../shaders/04_white.frag");
 
     while (!glfwWindowShouldClose(window))
     {
