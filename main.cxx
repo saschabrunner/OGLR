@@ -165,11 +165,13 @@ int main()
 
     // Load diffuse map texture
     GLuint diffuseMap = createTexture("../textures/container2.png", GL_TEXTURE0, GL_REPEAT);
+    GLuint specularMap = createTexture("../textures/container2_specular.png", GL_TEXTURE1, GL_REPEAT);
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/06_e.vert", "../shaders/06_lightMap.frag");
-    lightingShader.setFloat("material.diffuse", 0);
+    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_specularMap.frag");
+    lightingShader.setInt("material.diffuse", 0);
+    lightingShader.setInt("material.specular", 1);
     lightingShader.setFloat("material.specular", 0.5f, 0.5f, 0.5f);
     lightingShader.setFloat("material.shininess", 32.0f);
     lightingShader.setFloat("light.ambient", 0.2f, 0.2f, 0.2f);
@@ -236,6 +238,8 @@ int main()
         // bind texture
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
 
         std::cout << "bound texture" << std::endl;
 
