@@ -16,7 +16,7 @@
 #include "Shader.h"
 
 // prototypes
-GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format, GLint wrappingMode);
+GLuint createTexture(const char *path, GLenum glTextureIndex, GLint wrappingMode);
 void framebufferSizeCallback(GLFWwindow *window, int width, int height);
 void mouseCallback(GLFWwindow *window, double xPos, double yPos);
 void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
@@ -75,48 +75,48 @@ int main()
     // create two triangles with one vao for each
     // clang-format off
     GLfloat vertices[] = {
-        // position           normal
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+        // position           normal               texture coords
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
 
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
 
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
     };
     // clang-format on
 
@@ -135,12 +135,16 @@ int main()
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // position attribute (location = 0)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void *)0);
     glEnableVertexAttribArray(0);
 
     // normal attribute (location = 1)
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
+
+    // texture coordinates (location = 2)
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void *)(6 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(2);
 
     // we can unbind the buffer, since we just registered it to the vao
     // note: this is only allowed for GL_ARRAY_BUFFER, otherwise this would affect the vao state!
@@ -159,11 +163,13 @@ int main()
 
     glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
 
+    // Load diffuse map texture
+    GLuint diffuseMap = createTexture("../textures/container2.png", GL_TEXTURE0, GL_REPEAT);
+
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/04_normalCorrected.vert", "../shaders/04_materialLightingIntensity.frag");
-    lightingShader.setFloat("material.ambient", 1.0f, 0.5f, 0.31f);
-    lightingShader.setFloat("material.diffuse", 1.0f, 0.5f, 0.31f);
+    Shader lightingShader("../shaders/06_e.vert", "../shaders/06_lightMap.frag");
+    lightingShader.setFloat("material.diffuse", 0);
     lightingShader.setFloat("material.specular", 0.5f, 0.5f, 0.5f);
     lightingShader.setFloat("material.shininess", 32.0f);
     lightingShader.setFloat("light.ambient", 0.2f, 0.2f, 0.2f);
@@ -175,7 +181,7 @@ int main()
     glGenVertexArrays(1, &lightVao);
     glBindVertexArray(lightVao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void *)0);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -205,7 +211,7 @@ int main()
         projection = glm::perspective(glm::radians(camera.getFov()), (GLfloat)curWidth / (GLfloat)curHeight, 0.1f, 100.0f);
 
         // move light dynamically
-        lightPosition = glm::vec3(sin(currentFrame) * 3.0f, cos(currentFrame * .9f) * 3.0f, sin(currentFrame * 1.1f) * 3.0f);
+        lightPosition = glm::vec3(sin(currentFrame) * 1.5f, cos(currentFrame * .9f) * 1.5f, sin(currentFrame * 1.1f) * 1.5f);
 
         // calculate light position in view space, for shader
         glm::vec3 lightViewPosition = glm::vec3(view * glm::vec4(lightPosition, 1.0));
@@ -226,6 +232,12 @@ int main()
         lightingShader.setFloat("light.diffuse", diffuseColor);
 
         std::cout << "object shader uniforms set" << std::endl;
+
+        // bind texture
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
+        std::cout << "bound texture" << std::endl;
 
         // draw lit object in center
         glBindVertexArray(vao);
@@ -264,7 +276,7 @@ int main()
     return 0;
 }
 
-GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format, GLint wrappingMode)
+GLuint createTexture(const char *path, GLenum glTextureUnit, GLint wrappingMode)
 {
     // make sure the image is loaded in a way that represents OpenGL texture coordinates
     stbi_set_flip_vertically_on_load(true);
@@ -279,12 +291,32 @@ GLuint createTexture(const char *path, GLenum glTextureIndex, GLenum format, GLi
         return -1;
     }
 
+    GLenum format;
+
+    if (nrChannels == 1)
+    {
+        format = GL_RED;
+    }
+    else if (nrChannels == 3)
+    {
+        format = GL_RGB;
+    }
+    else if (nrChannels == 4)
+    {
+        format = GL_RGBA;
+    }
+    else
+    {
+        std::cerr << "Unexpected number of channels: " << nrChannels << std::endl;
+        return -1;
+    }
+
     // create texture
     GLuint texture;
     glGenTextures(1, &texture);
 
     // activate first texture unit and bind texture to it
-    glActiveTexture(glTextureIndex);
+    glActiveTexture(glTextureUnit);
     glBindTexture(GL_TEXTURE_2D, texture);
 
     // set texture attributes (repeat and use linear filtering)
