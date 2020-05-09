@@ -169,7 +169,7 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_specularMap.frag");
+    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_invertSpecularMap.frag");
     lightingShader.setInt("material.diffuse", 0);
     lightingShader.setInt("material.specular", 1);
     lightingShader.setFloat("material.specular", 0.5f, 0.5f, 0.5f);
