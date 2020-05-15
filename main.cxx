@@ -170,7 +170,7 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_emissionMap.frag");
+    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_emissionMapAnimated.frag");
     lightingShader.setInt("material.diffuse", 0);
     lightingShader.setInt("material.specular", 1);
     lightingShader.setInt("material.emission", 2);
@@ -232,6 +232,7 @@ int main()
         lightingShader.setFloat("view", view);
         lightingShader.setFloat("projection", projection);
         lightingShader.setFloat("light.position", lightViewPosition);
+        lightingShader.setFloat("material.emissionVerticalOffset", -glfwGetTime() / 5.0);
         // lightingShader.setFloat("light.ambient", ambientColor);
         // lightingShader.setFloat("light.diffuse", diffuseColor);
 
