@@ -165,13 +165,15 @@ int main()
 
     // Load diffuse map texture
     GLuint diffuseMap = createTexture("../textures/container2.png", GL_TEXTURE0, GL_REPEAT);
-    GLuint specularMap = createTexture("../textures/container2_coloredspecular.png", GL_TEXTURE1, GL_REPEAT);
+    GLuint specularMap = createTexture("../textures/container2_specular.png", GL_TEXTURE1, GL_REPEAT);
+    GLuint emissionMap = createTexture("../textures/matrix.jpg", GL_TEXTURE2, GL_REPEAT);
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_specularMap.frag");
+    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_emissionMap.frag");
     lightingShader.setInt("material.diffuse", 0);
     lightingShader.setInt("material.specular", 1);
+    lightingShader.setInt("material.emission", 2);
     lightingShader.setFloat("material.specular", 0.5f, 0.5f, 0.5f);
     lightingShader.setFloat("material.shininess", 32.0f);
     lightingShader.setFloat("light.ambient", 0.2f, 0.2f, 0.2f);
@@ -213,15 +215,15 @@ int main()
         projection = glm::perspective(glm::radians(camera.getFov()), (GLfloat)curWidth / (GLfloat)curHeight, 0.1f, 100.0f);
 
         // move light dynamically
-        lightPosition = glm::vec3(sin(currentFrame) * 1.5f, cos(currentFrame * .9f) * 1.5f, sin(currentFrame * 1.1f) * 1.5f);
+        // lightPosition = glm::vec3(sin(currentFrame) * 1.5f, cos(currentFrame * .9f) * 1.5f, sin(currentFrame * 1.1f) * 1.5f);
 
         // calculate light position in view space, for shader
         glm::vec3 lightViewPosition = glm::vec3(view * glm::vec4(lightPosition, 1.0));
 
-        // change the light color a little bit over time
-        glm::vec3 lightColor(sin(glfwGetTime() * 2.0f), sin(glfwGetTime() * 0.7f), sin(glfwGetTime() * 1.3f));
-        glm::vec3 ambientColor = lightColor * glm::vec3(0.2f);
-        glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+        // // change the light color a little bit over time
+        // glm::vec3 lightColor(sin(glfwGetTime() * 2.0f), sin(glfwGetTime() * 0.7f), sin(glfwGetTime() * 1.3f));
+        // glm::vec3 ambientColor = lightColor * glm::vec3(0.2f);
+        // glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
 
         std::cout << "transformations done" << std::endl;
 
@@ -230,16 +232,18 @@ int main()
         lightingShader.setFloat("view", view);
         lightingShader.setFloat("projection", projection);
         lightingShader.setFloat("light.position", lightViewPosition);
-        lightingShader.setFloat("light.ambient", ambientColor);
-        lightingShader.setFloat("light.diffuse", diffuseColor);
+        // lightingShader.setFloat("light.ambient", ambientColor);
+        // lightingShader.setFloat("light.diffuse", diffuseColor);
 
         std::cout << "object shader uniforms set" << std::endl;
 
-        // bind texture
+        // bind textures
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specularMap);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, emissionMap);
 
         std::cout << "bound texture" << std::endl;
 
@@ -256,7 +260,7 @@ int main()
         lightSourceShader.use();
         lightSourceShader.setFloat("view", view);
         lightSourceShader.setFloat("projection", projection);
-        lightSourceShader.setFloat("iColor", lightColor);
+        // lightSourceShader.setFloat("iColor", lightColor);
 
         std::cout << "light shader uniforms set" << std::endl;
 
