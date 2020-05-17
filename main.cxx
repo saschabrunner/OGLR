@@ -118,6 +118,19 @@ int main()
         -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
     };
+
+    glm::vec3 cubePositions[] = {
+        glm::vec3( 0.0f,  0.0f,  0.0f),
+        glm::vec3( 2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3( 2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3( 1.3f, -2.0f, -2.5f),
+        glm::vec3( 1.5f,  2.0f, -2.5f),
+        glm::vec3( 1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
     // clang-format on
 
     // vertex array object
@@ -161,8 +174,6 @@ int main()
     glm::mat4 view;       // from world to view space
     glm::mat4 projection; // from view to clip space
 
-    glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
-
     // Load diffuse map texture
     GLuint diffuseMap = createTexture("../textures/container2.png", GL_TEXTURE0, GL_REPEAT);
     GLuint specularMap = createTexture("../textures/container2_specular.png", GL_TEXTURE1, GL_REPEAT);
@@ -170,12 +181,13 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_emissionMapAnimated.frag");
+    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_directionalLight.frag");
     lightingShader.setInt("material.diffuse", 0);
     lightingShader.setInt("material.specular", 1);
     lightingShader.setInt("material.emission", 2);
     lightingShader.setFloat("material.specular", 0.5f, 0.5f, 0.5f);
     lightingShader.setFloat("material.shininess", 32.0f);
+    lightingShader.setFloat("light.direction", -0.2f, -1.0f, -0.3f);
     lightingShader.setFloat("light.ambient", 0.2f, 0.2f, 0.2f);
     lightingShader.setFloat("light.diffuse", 0.5f, 0.5f, 0.5f);
     lightingShader.setFloat("light.specular", 1.0f, 1.0f, 1.0f);
@@ -214,28 +226,13 @@ int main()
         view = camera.calculateView();
         projection = glm::perspective(glm::radians(camera.getFov()), (GLfloat)curWidth / (GLfloat)curHeight, 0.1f, 100.0f);
 
-        // move light dynamically
-        // lightPosition = glm::vec3(sin(currentFrame) * 1.5f, cos(currentFrame * .9f) * 1.5f, sin(currentFrame * 1.1f) * 1.5f);
-
-        // calculate light position in view space, for shader
-        glm::vec3 lightViewPosition = glm::vec3(view * glm::vec4(lightPosition, 1.0));
-
-        // // change the light color a little bit over time
-        // glm::vec3 lightColor(sin(glfwGetTime() * 2.0f), sin(glfwGetTime() * 0.7f), sin(glfwGetTime() * 1.3f));
-        // glm::vec3 ambientColor = lightColor * glm::vec3(0.2f);
-        // glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
-
         std::cout << "transformations done" << std::endl;
 
         // update object shader
         lightingShader.use();
         lightingShader.setFloat("view", view);
         lightingShader.setFloat("projection", projection);
-        lightingShader.setFloat("light.position", lightViewPosition);
         lightingShader.setFloat("material.emissionVerticalOffset", -glfwGetTime() / 5.0);
-        // lightingShader.setFloat("light.ambient", ambientColor);
-        // lightingShader.setFloat("light.diffuse", diffuseColor);
-
         std::cout << "object shader uniforms set" << std::endl;
 
         // bind textures
@@ -248,32 +245,19 @@ int main()
 
         std::cout << "bound texture" << std::endl;
 
-        // draw lit object in center
+        // draw cubes
         glBindVertexArray(vao);
-        model = identityMatrix;
-        lightingShader.setFloat("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for (int i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); i++)
+        {
+            model = glm::translate(identityMatrix, cubePositions[i]);
+            model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
+            lightingShader.setFloat("model", model);
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
         glBindVertexArray(0);
 
-        std::cout << "object drawn" << std::endl;
-
-        // update light shader
-        lightSourceShader.use();
-        lightSourceShader.setFloat("view", view);
-        lightSourceShader.setFloat("projection", projection);
-        // lightSourceShader.setFloat("iColor", lightColor);
-
-        std::cout << "light shader uniforms set" << std::endl;
-
-        // draw light source
-        glBindVertexArray(lightVao);
-        model = glm::translate(identityMatrix, lightPosition);
-        model = glm::scale(model, glm::vec3(0.2f));
-        lightSourceShader.setFloat("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
-
-        std::cout << "light drawn" << std::endl;
+        std::cout << "object(s) drawn" << std::endl;
 
         // poll events and swap buffers
         glfwPollEvents();
