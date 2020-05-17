@@ -174,6 +174,8 @@ int main()
     glm::mat4 view;       // from world to view space
     glm::mat4 projection; // from view to clip space
 
+    glm::vec3 lightDirection(-0.2f, -1.0f, -0.3f); // local direction of directional light
+
     // Load diffuse map texture
     GLuint diffuseMap = createTexture("../textures/container2.png", GL_TEXTURE0, GL_REPEAT);
     GLuint specularMap = createTexture("../textures/container2_specular.png", GL_TEXTURE1, GL_REPEAT);
@@ -187,7 +189,6 @@ int main()
     lightingShader.setInt("material.emission", 2);
     lightingShader.setFloat("material.specular", 0.5f, 0.5f, 0.5f);
     lightingShader.setFloat("material.shininess", 32.0f);
-    lightingShader.setFloat("light.direction", -0.2f, -1.0f, -0.3f);
     lightingShader.setFloat("light.ambient", 0.2f, 0.2f, 0.2f);
     lightingShader.setFloat("light.diffuse", 0.5f, 0.5f, 0.5f);
     lightingShader.setFloat("light.specular", 1.0f, 1.0f, 1.0f);
@@ -225,13 +226,14 @@ int main()
         // calculate new view and projection
         view = camera.calculateView();
         projection = glm::perspective(glm::radians(camera.getFov()), (GLfloat)curWidth / (GLfloat)curHeight, 0.1f, 100.0f);
-
+        glm::vec3 lightViewDirection = glm::vec3(glm::transpose(glm::inverse(view)) * glm::vec4(lightDirection, 1.0));
         std::cout << "transformations done" << std::endl;
 
         // update object shader
         lightingShader.use();
         lightingShader.setFloat("view", view);
         lightingShader.setFloat("projection", projection);
+        lightingShader.setFloat("light.direction", lightViewDirection);
         lightingShader.setFloat("material.emissionVerticalOffset", -glfwGetTime() / 5.0);
         std::cout << "object shader uniforms set" << std::endl;
 
