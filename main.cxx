@@ -174,7 +174,7 @@ int main()
     glm::mat4 view;       // from world to view space
     glm::mat4 projection; // from view to clip space
 
-    glm::vec3 lightDirection(-0.2f, -1.0f, -0.3f); // local direction of directional light
+    glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
 
     // Load diffuse map texture
     GLuint diffuseMap = createTexture("../textures/container2.png", GL_TEXTURE0, GL_REPEAT);
@@ -183,7 +183,7 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_directionalLight.frag");
+    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_pointLight.frag");
     lightingShader.setInt("material.diffuse", 0);
     lightingShader.setInt("material.specular", 1);
     lightingShader.setInt("material.emission", 2);
@@ -192,6 +192,9 @@ int main()
     lightingShader.setFloat("light.ambient", 0.2f, 0.2f, 0.2f);
     lightingShader.setFloat("light.diffuse", 0.5f, 0.5f, 0.5f);
     lightingShader.setFloat("light.specular", 1.0f, 1.0f, 1.0f);
+    lightingShader.setFloat("light.constant", 1.0f);
+    lightingShader.setFloat("light.linear", 0.09f);
+    lightingShader.setFloat("light.quadratic", 0.032f);
 
     // set up light VAO
     GLuint lightVao;
@@ -226,14 +229,16 @@ int main()
         // calculate new view and projection
         view = camera.calculateView();
         projection = glm::perspective(glm::radians(camera.getFov()), (GLfloat)curWidth / (GLfloat)curHeight, 0.1f, 100.0f);
-        glm::vec3 lightViewDirection = glm::vec3(glm::transpose(glm::inverse(view)) * glm::vec4(lightDirection, 1.0));
+
+        glm::vec3 lightViewPosition = glm::vec3(view * glm::vec4(lightPosition, 1.0));
+
         std::cout << "transformations done" << std::endl;
 
         // update object shader
         lightingShader.use();
         lightingShader.setFloat("view", view);
         lightingShader.setFloat("projection", projection);
-        lightingShader.setFloat("light.direction", lightViewDirection);
+        lightingShader.setFloat("light.position", lightViewPosition);
         lightingShader.setFloat("material.emissionVerticalOffset", -glfwGetTime() / 5.0);
         std::cout << "object shader uniforms set" << std::endl;
 
