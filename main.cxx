@@ -185,7 +185,7 @@ int main()
 
     // create shader program
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_spotLight.frag");
+    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_spotLightSmooth.frag");
     lightingShader.setInt("material.diffuse", 0);
     lightingShader.setInt("material.specular", 1);
     lightingShader.setInt("material.emission", 2);
@@ -199,7 +199,8 @@ int main()
     lightingShader.setFloat("light.constant", 1.0f);
     lightingShader.setFloat("light.linear", 0.09f);
     lightingShader.setFloat("light.quadratic", 0.032f);
-    lightingShader.setFloat("light.cutoff", glm::cos(glm::radians(12.5f))); // going to be used for dot product, so use cos
+    lightingShader.setFloat("light.cutOff", glm::cos(glm::radians(12.5f))); // going to be used for dot product, so use cos
+    lightingShader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
 
     // set up light VAO
     GLuint lightVao;
