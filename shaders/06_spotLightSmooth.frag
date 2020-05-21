@@ -7,7 +7,7 @@ struct Material {
     float shininess;
 };
 
-// point light with attenuation
+// spotlight with smoothed edges
 struct Light {
     vec3 position;
     vec3 direction;
@@ -83,5 +83,5 @@ void main()
     }
     
     // color = vec4(ambient + diffuse + specular + emission, 1.0);
-    color = vec4(ambient + diffuse + specular, 1.0);
+    color = vec4(ambient + diffuse + specular + emission, 1.0);
 }
