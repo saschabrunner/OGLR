@@ -86,12 +86,12 @@ void main()
     result += calculateSpotLight(spotLight, normalizedNormal, fragmentViewPosition, specularTexel);
 
     // add light that the object itself emits (ignore areas with any specular)
-    vec3 emission;
-    if (specularTexel.r == 0.0) 
-    {
-        vec2 emissionTextureCoordinates = vec2(textureCoordinates.x, textureCoordinates.y + material.emissionVerticalOffset);
-        result += vec3(texture(material.emission, emissionTextureCoordinates));
-    }
+    // vec3 emission;
+    // if (specularTexel.r == 0.0) 
+    // {
+    //     vec2 emissionTextureCoordinates = vec2(textureCoordinates.x, textureCoordinates.y + material.emissionVerticalOffset);
+    //     result += vec3(texture(material.emission, emissionTextureCoordinates));
+    // }
     
     color = vec4(result, 1.0);
 }

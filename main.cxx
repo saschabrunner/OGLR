@@ -72,7 +72,7 @@ int main()
 
     // set clear color (background color)
     // state setting, call once
-    glClearColor(.8f, .3f, .3f, 1.0f);
+    glClearColor(.8f, .8f, .8f, 1.0f);
 
     // create two triangles with one vao for each
     // clang-format off
@@ -208,8 +208,8 @@ int main()
         std::ostringstream pointLightIdentifier;
         pointLightIdentifier << "pointLights[" << i << "]";
         std::string pointLight = pointLightIdentifier.str();
-        lightingShader.setFloat(pointLight + ".ambient", 0.2f, 0.2f, 0.2f);
-        lightingShader.setFloat(pointLight + ".diffuse", 0.5f, 0.5f, 0.5f);
+        lightingShader.setFloat(pointLight + ".ambient", 0.06f, 0.2f, 0.0f);
+        lightingShader.setFloat(pointLight + ".diffuse", 0.12f, 0.4f, 0.0f);
         lightingShader.setFloat(pointLight + ".specular", 1.0f, 1.0f, 1.0f);
         lightingShader.setFloat(pointLight + ".constant", 1.0f);
         lightingShader.setFloat(pointLight + ".linear", 0.09f);
@@ -232,7 +232,7 @@ int main()
     lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
 
     Shader lightSourceShader("../shaders/04_normalCorrected.vert", "../shaders/04_color.frag");
-    lightSourceShader.setFloat("iColor", 1.0f, 1.0f, 1.0f);
+    lightSourceShader.setFloat("iColor", 0.239f, 0.8f, 0.0f);
 
     // set up light VAO
     GLuint lightVao;
@@ -313,7 +313,7 @@ int main()
 
         // draw light sources
         glBindVertexArray(lightVao);
-        for (int i = 0; i < sizeof(pointLightPositions) / sizeof(GLfloat); i++)
+        for (int i = 0; i < sizeof(pointLightPositions) / sizeof(glm::vec3); i++)
         {
             model = glm::translate(identityMatrix, pointLightPositions[i]);
             model = glm::scale(model, glm::vec3(0.2f));
