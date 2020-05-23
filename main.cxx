@@ -2,6 +2,8 @@
 #define STB_IMAGE_IMPLEMENTATION // stb_image.h one time initialization
 
 #include <iostream>
+#include <sstream>
+#include <string>
 
 #include <GLFW/glfw3.h>
 
@@ -131,6 +133,13 @@ int main()
         glm::vec3( 1.5f,  0.2f, -1.5f),
         glm::vec3(-1.3f,  1.0f, -1.5f)
     };
+
+    glm::vec3 pointLightPositions[] = {
+        glm::vec3( 0.7f,  0.2f,  2.0f),
+        glm::vec3( 2.3f, -3.3f, -4.0f),
+        glm::vec3(-4.0f,  2.0f, -12.0f),
+        glm::vec3( 0.0f,  0.0f, -3.0f)
+    };
     // clang-format on
 
     // vertex array object
@@ -174,33 +183,56 @@ int main()
     glm::mat4 view;       // from world to view space
     glm::mat4 projection; // from view to clip space
 
-    // we are simulating a flashlight that's shining from the player's viewpoint
-    glm::vec3 lightViewDirection(0.0f, 0.0f, -1.0f);
-    glm::vec3 lightViewPosition(0.0f, 0.0f, 0.0f);
-
     // Load diffuse map texture
     GLuint diffuseMap = createTexture("../textures/container2.png", GL_TEXTURE0, GL_REPEAT);
     GLuint specularMap = createTexture("../textures/container2_specular.png", GL_TEXTURE1, GL_REPEAT);
     GLuint emissionMap = createTexture("../textures/matrix.jpg", GL_TEXTURE2, GL_REPEAT);
 
-    // create shader program
+    // create shader programs
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_spotLightSmooth.frag");
+    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_multipleLights.frag");
     lightingShader.setInt("material.diffuse", 0);
     lightingShader.setInt("material.specular", 1);
     lightingShader.setInt("material.emission", 2);
-    lightingShader.setFloat("material.specular", 0.5f, 0.5f, 0.5f);
     lightingShader.setFloat("material.shininess", 32.0f);
-    lightingShader.setFloat("light.position", lightViewPosition);
-    lightingShader.setFloat("light.direction", lightViewDirection);
-    lightingShader.setFloat("light.ambient", 0.2f, 0.2f, 0.2f);
-    lightingShader.setFloat("light.diffuse", 0.5f, 0.5f, 0.5f);
-    lightingShader.setFloat("light.specular", 1.0f, 1.0f, 1.0f);
-    lightingShader.setFloat("light.constant", 1.0f);
-    lightingShader.setFloat("light.linear", 0.09f);
-    lightingShader.setFloat("light.quadratic", 0.032f);
-    lightingShader.setFloat("light.cutOff", glm::cos(glm::radians(12.5f))); // going to be used for dot product, so use cos
-    lightingShader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+
+    // directional light
+    lightingShader.setFloat("directionalLight.direction", -0.2f, -1.0f, -0.3f);
+    lightingShader.setFloat("directionalLight.ambient", 0.2f, 0.2f, 0.2f);
+    lightingShader.setFloat("directionalLight.diffuse", 0.5f, 0.5f, 0.5f);
+    lightingShader.setFloat("directionalLight.specular", 1.0f, 1.0f, 1.0f);
+
+    // point lights
+    for (int i = 0; i < sizeof(pointLightPositions) / sizeof(glm::vec3); i++)
+    {
+        std::ostringstream pointLightIdentifier;
+        pointLightIdentifier << "pointLights[" << i << "]";
+        std::string pointLight = pointLightIdentifier.str();
+        lightingShader.setFloat(pointLight + ".ambient", 0.2f, 0.2f, 0.2f);
+        lightingShader.setFloat(pointLight + ".diffuse", 0.5f, 0.5f, 0.5f);
+        lightingShader.setFloat(pointLight + ".specular", 1.0f, 1.0f, 1.0f);
+        lightingShader.setFloat(pointLight + ".constant", 1.0f);
+        lightingShader.setFloat(pointLight + ".linear", 0.09f);
+        lightingShader.setFloat(pointLight + ".quadratic", 0.032f);
+    }
+
+    // spotlight
+    // we are simulating a flashlight that's shining from the player's viewpoint
+    glm::vec3 spotLightViewPosition(0.0f, 0.0f, 0.0f);
+    glm::vec3 spotLightViewDirection(0.0f, 0.0f, -1.0f);
+    lightingShader.setFloat("spotLight.position", spotLightViewPosition);
+    lightingShader.setFloat("spotLight.direction", spotLightViewDirection);
+    lightingShader.setFloat("spotLight.ambient", 0.2f, 0.2f, 0.2f);
+    lightingShader.setFloat("spotLight.diffuse", 0.5f, 0.5f, 0.5f);
+    lightingShader.setFloat("spotLight.specular", 1.0f, 1.0f, 1.0f);
+    lightingShader.setFloat("spotLight.constant", 1.0f);
+    lightingShader.setFloat("spotLight.linear", 0.09f);
+    lightingShader.setFloat("spotLight.quadratic", 0.032f);
+    lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f))); // going to be used for dot product, so use cos
+    lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+
+    Shader lightSourceShader("../shaders/04_normalCorrected.vert", "../shaders/04_color.frag");
+    lightSourceShader.setFloat("iColor", 1.0f, 1.0f, 1.0f);
 
     // set up light VAO
     GLuint lightVao;
@@ -211,9 +243,6 @@ int main()
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
-    Shader lightSourceShader("../shaders/04_normalCorrected.vert", "../shaders/04_color.frag");
-    lightSourceShader.setFloat("iColor", 1.0f, 1.0f, 1.0f);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -242,6 +271,15 @@ int main()
         lightingShader.setFloat("view", view);
         lightingShader.setFloat("projection", projection);
         lightingShader.setFloat("material.emissionVerticalOffset", -glfwGetTime() / 5.0);
+
+        for (int i = 0; i < sizeof(pointLightPositions) / sizeof(glm::vec3); i++)
+        {
+            std::ostringstream pointLightIdentifier;
+            pointLightIdentifier << "pointLights[" << i << "].position";
+            glm::vec3 viewPosition = glm::vec3(view * glm::vec4(pointLightPositions[i], 1.0));
+            lightingShader.setFloat(pointLightIdentifier.str(), viewPosition);
+        }
+
         std::cout << "object shader uniforms set" << std::endl;
 
         // bind textures
@@ -267,6 +305,22 @@ int main()
         glBindVertexArray(0);
 
         std::cout << "object(s) drawn" << std::endl;
+
+        // update light shader
+        lightSourceShader.use();
+        lightSourceShader.setFloat("view", view);
+        lightSourceShader.setFloat("projection", projection);
+
+        // draw light sources
+        glBindVertexArray(lightVao);
+        for (int i = 0; i < sizeof(pointLightPositions) / sizeof(GLfloat); i++)
+        {
+            model = glm::translate(identityMatrix, pointLightPositions[i]);
+            model = glm::scale(model, glm::vec3(0.2f));
+            lightSourceShader.setFloat("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+        glBindVertexArray(0);
 
         // poll events and swap buffers
         glfwPollEvents();
