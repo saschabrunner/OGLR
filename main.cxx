@@ -72,7 +72,7 @@ int main()
 
     // set clear color (background color)
     // state setting, call once
-    glClearColor(.8f, .8f, .8f, 1.0f);
+    glClearColor(.01f, .01f, .01f, 1.0f);
 
     // create two triangles with one vao for each
     // clang-format off
@@ -198,9 +198,9 @@ int main()
 
     // directional light
     lightingShader.setFloat("directionalLight.direction", -0.2f, -1.0f, -0.3f);
-    lightingShader.setFloat("directionalLight.ambient", 0.2f, 0.2f, 0.2f);
-    lightingShader.setFloat("directionalLight.diffuse", 0.5f, 0.5f, 0.5f);
-    lightingShader.setFloat("directionalLight.specular", 1.0f, 1.0f, 1.0f);
+    lightingShader.setFloat("directionalLight.ambient", 0.02f, 0.02f, 0.02f);
+    lightingShader.setFloat("directionalLight.diffuse", 0.08f, 0.08f, 0.08f);
+    lightingShader.setFloat("directionalLight.specular", 0.3f, 0.3f, 0.3f);
 
     // point lights
     for (int i = 0; i < sizeof(pointLightPositions) / sizeof(glm::vec3); i++)
@@ -208,12 +208,12 @@ int main()
         std::ostringstream pointLightIdentifier;
         pointLightIdentifier << "pointLights[" << i << "]";
         std::string pointLight = pointLightIdentifier.str();
-        lightingShader.setFloat(pointLight + ".ambient", 0.06f, 0.2f, 0.0f);
-        lightingShader.setFloat(pointLight + ".diffuse", 0.12f, 0.4f, 0.0f);
+        lightingShader.setFloat(pointLight + ".ambient", 0.03f, 0.008f, 0.0f);
+        lightingShader.setFloat(pointLight + ".diffuse", 0.2f, 0.05f, 0.0f);
         lightingShader.setFloat(pointLight + ".specular", 1.0f, 1.0f, 1.0f);
         lightingShader.setFloat(pointLight + ".constant", 1.0f);
-        lightingShader.setFloat(pointLight + ".linear", 0.09f);
-        lightingShader.setFloat(pointLight + ".quadratic", 0.032f);
+        lightingShader.setFloat(pointLight + ".linear", 0.14f);
+        lightingShader.setFloat(pointLight + ".quadratic", 0.07f);
     }
 
     // spotlight
@@ -222,17 +222,17 @@ int main()
     glm::vec3 spotLightViewDirection(0.0f, 0.0f, -1.0f);
     lightingShader.setFloat("spotLight.position", spotLightViewPosition);
     lightingShader.setFloat("spotLight.direction", spotLightViewDirection);
-    lightingShader.setFloat("spotLight.ambient", 0.2f, 0.2f, 0.2f);
-    lightingShader.setFloat("spotLight.diffuse", 0.5f, 0.5f, 0.5f);
+    lightingShader.setFloat("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+    lightingShader.setFloat("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
     lightingShader.setFloat("spotLight.specular", 1.0f, 1.0f, 1.0f);
     lightingShader.setFloat("spotLight.constant", 1.0f);
     lightingShader.setFloat("spotLight.linear", 0.09f);
     lightingShader.setFloat("spotLight.quadratic", 0.032f);
     lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f))); // going to be used for dot product, so use cos
-    lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+    lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
 
     Shader lightSourceShader("../shaders/04_normalCorrected.vert", "../shaders/04_color.frag");
-    lightSourceShader.setFloat("iColor", 0.239f, 0.8f, 0.0f);
+    lightSourceShader.setFloat("iColor", 0.2f, 0.05f, 0.0f);
 
     // set up light VAO
     GLuint lightVao;
