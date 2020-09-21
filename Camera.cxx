@@ -165,20 +165,20 @@ void Camera::move(CameraDirection direction, float deltaTime)
 
 void Camera::moveInternal(const glm::vec3 &forward, CameraDirection direction, float deltaTime)
 {
-    if (direction == FORWARD)
+    if (direction == CameraDirection::FORWARD)
     {
         position += speed * deltaTime * forward;
     }
-    else if (direction == BACKWARD)
+    else if (direction == CameraDirection::BACKWARD)
     {
         position -= speed * deltaTime * forward;
     }
-    else if (direction == LEFT)
+    else if (direction == CameraDirection::LEFT)
     {
         // normalize the cross product so that movement speed is not dependent on forward which changes with rotation
         position -= glm::normalize(glm::cross(forward, up)) * speed * deltaTime;
     }
-    else if (direction == RIGHT)
+    else if (direction == CameraDirection::RIGHT)
     {
         // normalize the cross product so that movement speed is not dependent on forward which changes with rotation
         position += glm::normalize(glm::cross(forward, up)) * speed * deltaTime;

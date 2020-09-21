@@ -9,7 +9,7 @@ const float DEFAULT_FOV = 45.0f;
 const float DEFAULT_SENSITIVITY = 0.05f;
 const float DEFAULT_SPEED = 2.5f;
 
-enum CameraDirection
+enum class CameraDirection
 {
     FORWARD,
     BACKWARD,

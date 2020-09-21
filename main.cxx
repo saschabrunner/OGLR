@@ -421,21 +421,21 @@ void processInput(GLFWwindow *window)
     // TODO: Store button states, for when they're held down or switch to event based input handling
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
-        camera.move(FORWARD, deltaTime);
+        camera.move(CameraDirection::FORWARD, deltaTime);
     }
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
-        camera.move(BACKWARD, deltaTime);
+        camera.move(CameraDirection::BACKWARD, deltaTime);
     }
 
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
-        camera.move(LEFT, deltaTime);
+        camera.move(CameraDirection::LEFT, deltaTime);
     }
 
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
-        camera.move(RIGHT, deltaTime);
+        camera.move(CameraDirection::RIGHT, deltaTime);
     }
 }
