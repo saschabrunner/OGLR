@@ -14,7 +14,7 @@ class Shader
 {
 public:
     // constructor reads and builds the shader program
-    Shader(const char *vertexShaderPath, const char *fragmentShaderPath);
+    Shader(const std::string &vertexShaderPath, const std::string &fragmentShaderPath);
 
     // use/activate the shader
     void use() const;

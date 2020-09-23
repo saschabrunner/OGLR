@@ -2,7 +2,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-Shader::Shader(const char *vertexShaderPath, const char *fragmentShaderPath)
+Shader::Shader(const std::string &vertexShaderPath, const std::string &fragmentShaderPath)
 {
     // retrieve shader source from file system
     std::string vertexCode;

@@ -14,11 +14,12 @@
 #include "glad/glad.h"
 #include "stb_image.h"
 
+#include "DataDirHelper.h"
 #include "Camera.h"
 #include "Shader.h"
 
 // prototypes
-GLuint createTexture(const char *path, GLenum glTextureIndex, GLint wrappingMode);
+GLuint createTexture(const std::string &path, GLenum glTextureIndex, GLint wrappingMode);
 void framebufferSizeCallback(GLFWwindow *window, int width, int height);
 void mouseCallback(GLFWwindow *window, double xPos, double yPos);
 void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
@@ -40,6 +41,8 @@ Camera camera(glm::vec3(1.0f, 1.0f, 6.0f), glm::vec3(0.0f, 1.0f, 0.0f), -10.0f, 
 
 int main()
 {
+    DataDirHelper &dataDirHelper = DataDirHelper::getInstance();
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -184,13 +187,13 @@ int main()
     glm::mat4 projection; // from view to clip space
 
     // Load diffuse map texture
-    GLuint diffuseMap = createTexture("../textures/container2.png", GL_TEXTURE0, GL_REPEAT);
-    GLuint specularMap = createTexture("../textures/container2_specular.png", GL_TEXTURE1, GL_REPEAT);
-    GLuint emissionMap = createTexture("../textures/matrix.jpg", GL_TEXTURE2, GL_REPEAT);
+    GLuint diffuseMap = createTexture(dataDirHelper.locate("textures/container2.png"), GL_TEXTURE0, GL_REPEAT);
+    GLuint specularMap = createTexture(dataDirHelper.locate("textures/container2_specular.png"), GL_TEXTURE1, GL_REPEAT);
+    GLuint emissionMap = createTexture(dataDirHelper.locate("textures/matrix.jpg"), GL_TEXTURE2, GL_REPEAT);
 
     // create shader programs
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader("../shaders/06_normalTexCoord.vert", "../shaders/06_multipleLights.frag");
+    Shader lightingShader(dataDirHelper.locate("shaders/06_normalTexCoord.vert"), dataDirHelper.locate("shaders/06_multipleLights.frag"));
     lightingShader.setInt("material.diffuse", 0);
     lightingShader.setInt("material.specular", 1);
     lightingShader.setInt("material.emission", 2);
@@ -231,7 +234,7 @@ int main()
     lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f))); // going to be used for dot product, so use cos
     lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
 
-    Shader lightSourceShader("../shaders/04_normalCorrected.vert", "../shaders/04_color.frag");
+    Shader lightSourceShader(dataDirHelper.locate("shaders/04_normalCorrected.vert"), dataDirHelper.locate("shaders/04_color.frag"));
     lightSourceShader.setFloat("iColor", 0.2f, 0.05f, 0.0f);
 
     // set up light VAO
@@ -332,14 +335,14 @@ int main()
     return 0;
 }
 
-GLuint createTexture(const char *path, GLenum glTextureUnit, GLint wrappingMode)
+GLuint createTexture(const std::string &path, GLenum glTextureUnit, GLint wrappingMode)
 {
     // make sure the image is loaded in a way that represents OpenGL texture coordinates
     stbi_set_flip_vertically_on_load(true);
 
     // read image into byte array
     int width, height, nrChannels;
-    unsigned char *textureData = stbi_load(path, &width, &height, &nrChannels, 0);
+    unsigned char *textureData = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
 
     if (!textureData)
     {

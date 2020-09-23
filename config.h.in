@@ -1,0 +1,7 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#define DATADIR "@datadir@"
+#define PROJECT_NAME "@project_name@"
+
+#endif
