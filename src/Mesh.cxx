@@ -1,4 +1,4 @@
-#include "glad/glad.h"
+#include "lib/glad/include/glad/glad.h"
 
 #include "Mesh.h"
 
