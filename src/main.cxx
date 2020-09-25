@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 
 #include <GLFW/glfw3.h>
 
@@ -14,68 +15,61 @@
 #include "lib/glad/include/glad/glad.h"
 #include "lib/stb_image.h"
 
+// imgui
+#include "lib/imgui/imgui.h"
+#include "lib/imgui/imgui_impl_glfw.h"
+#include "lib/imgui/imgui_impl_opengl3.h"
+
 #include "DataDirHelper.h"
 #include "Camera.h"
 #include "Shader.h"
 
 // prototypes
+void init();
+void initGlfw();
+void initGlad();
+void initGl();
+void initImgui();
+void deInit();
 GLuint createTexture(const std::string &path, GLenum glTextureIndex, GLint wrappingMode);
+void moveCamera();
+void drawImgui();
 void framebufferSizeCallback(GLFWwindow *window, int width, int height);
 void mouseCallback(GLFWwindow *window, double xPos, double yPos);
 void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
-void processInput(GLFWwindow *window);
+void keyboardCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+void errorCallback(int error, const char *description);
+
+// imgui state
+struct
+{
+    bool showMainWindow;
+    bool showDemoWindow;
+} imguiState;
 
 // settings
-const GLuint DEFAULT_WIDTH = 800;
-const GLuint DEFAULT_HEIGHT = 600;
+const GLuint DEFAULT_WIDTH = 1280;
+const GLuint DEFAULT_HEIGHT = 720;
+
+GLFWwindow *window;
+GLuint curWidth = DEFAULT_WIDTH;
+GLuint curHeight = DEFAULT_HEIGHT;
 
 // time
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-GLuint curWidth = DEFAULT_WIDTH;
-GLuint curHeight = DEFAULT_HEIGHT;
-
 // camera slightly off to the side and looking down from above
 Camera camera(glm::vec3(1.0f, 1.0f, 6.0f), glm::vec3(0.0f, 1.0f, 0.0f), -10.0f, -100.0f);
 
+// this map will store the state for each key being pressed on the keyboard
+// TODO: Replace this with a more flexible keyboard/input handling class at some point
+std::unordered_map<int, bool> keyStates;
+
 int main()
 {
+    init();
     DataDirHelper &dataDirHelper = DataDirHelper::getInstance();
-
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow *window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, "E", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
-    glViewport(0, 0, 800, 600);
-    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
-
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetCursorPosCallback(window, mouseCallback);
-    glfwSetScrollCallback(window, scrollCallback);
-
-    // enable depth testing through z-buffer
-    glEnable(GL_DEPTH_TEST);
-
-    // set clear color (background color)
-    // state setting, call once
-    glClearColor(.01f, .01f, .01f, 1.0f);
 
     // create two triangles with one vao for each
     // clang-format off
@@ -249,17 +243,14 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
+        glfwPollEvents();
+
         // keep record of time
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        std::cout << "frame start " << currentFrame << std::endl;
-
-        // input
-        processInput(window);
-
-        std::cout << "processed input" << std::endl;
+        moveCamera();
 
         // render background
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -267,7 +258,6 @@ int main()
         // calculate new view and projection
         view = camera.calculateView();
         projection = glm::perspective(glm::radians(camera.getFov()), (GLfloat)curWidth / (GLfloat)curHeight, 0.1f, 100.0f);
-        std::cout << "transformations done" << std::endl;
 
         // update object shader
         lightingShader.use();
@@ -283,8 +273,6 @@ int main()
             lightingShader.setFloat(pointLightIdentifier.str(), viewPosition);
         }
 
-        std::cout << "object shader uniforms set" << std::endl;
-
         // bind textures
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
@@ -292,8 +280,6 @@ int main()
         glBindTexture(GL_TEXTURE_2D, specularMap);
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, emissionMap);
-
-        std::cout << "bound texture" << std::endl;
 
         // draw cubes
         glBindVertexArray(vao);
@@ -306,8 +292,6 @@ int main()
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         glBindVertexArray(0);
-
-        std::cout << "object(s) drawn" << std::endl;
 
         // update light shader
         lightSourceShader.use();
@@ -325,14 +309,97 @@ int main()
         }
         glBindVertexArray(0);
 
-        // poll events and swap buffers
-        glfwPollEvents();
+        drawImgui();
+
+        // swap buffers
         glfwSwapBuffers(window);
-        std::cout << "frame end" << std::endl;
     }
 
-    glfwTerminate();
     return 0;
+}
+
+void init()
+{
+    initGlfw();
+    initGlad();
+    initGl();
+    initImgui();
+}
+
+void initGlfw()
+{
+    glfwSetErrorCallback(errorCallback);
+    if (!glfwInit())
+    {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        exit(-1);
+    }
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, "E", NULL, NULL);
+    if (window == NULL)
+    {
+        std::cerr << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        exit(-1);
+    }
+    glfwMakeContextCurrent(window);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // TODO
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);
+    glfwSetKeyCallback(window, keyboardCallback);
+    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+
+    // enable vsync
+    glfwSwapInterval(1);
+}
+
+void initGlad()
+{
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cerr << "Failed to initialize GLAD" << std::endl;
+        exit(-1);
+    }
+}
+
+void initGl()
+{
+    glViewport(0, 0, curWidth, curHeight);
+
+    // enable depth testing through z-buffer
+    glEnable(GL_DEPTH_TEST);
+
+    // set clear color (background color)
+    // state setting, call once
+    glClearColor(.01f, .01f, .01f, 1.0f);
+}
+
+void initImgui()
+{
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+}
+
+void deInit()
+{
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
 }
 
 GLuint createTexture(const std::string &path, GLenum glTextureUnit, GLint wrappingMode)
@@ -396,6 +463,66 @@ GLuint createTexture(const std::string &path, GLenum glTextureUnit, GLint wrappi
     return texture;
 }
 
+void moveCamera()
+{
+    if (keyStates[GLFW_KEY_W])
+    {
+        camera.move(CameraDirection::FORWARD, deltaTime);
+    }
+
+    if (keyStates[GLFW_KEY_S])
+    {
+        camera.move(CameraDirection::BACKWARD, deltaTime);
+    }
+
+    if (keyStates[GLFW_KEY_A])
+    {
+        camera.move(CameraDirection::LEFT, deltaTime);
+    }
+
+    if (keyStates[GLFW_KEY_D])
+    {
+        camera.move(CameraDirection::RIGHT, deltaTime);
+    }
+}
+
+void drawImgui()
+{
+    // start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    // show the main debug window
+    if (imguiState.showMainWindow)
+    {
+        ImGui::Begin("Main");
+
+        if (ImGui::Button("Show demo window"))
+        {
+            imguiState.showDemoWindow = !imguiState.showDemoWindow;
+        }
+
+        if (ImGui::Button("Quit"))
+        {
+            glfwSetWindowShouldClose(window, true);
+        }
+
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::End();
+    }
+
+    // show the integrated demo window of imgui
+    if (imguiState.showDemoWindow)
+    {
+        ImGui::ShowDemoWindow(&imguiState.showDemoWindow);
+    }
+
+    // draw imgui
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
 void framebufferSizeCallback(GLFWwindow *window, int width, int height)
 {
     curWidth = width;
@@ -405,40 +532,33 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height)
 
 void mouseCallback(GLFWwindow *window, double xPos, double yPos)
 {
-    camera.rotate(xPos, yPos);
+    if (!ImGui::GetIO().WantCaptureMouse)
+    {
+        camera.rotate(xPos, yPos);
+    }
 }
 
 void scrollCallback(GLFWwindow *window, double xOffset, double yOffset)
 {
-    camera.zoom(yOffset);
+    if (!ImGui::GetIO().WantCaptureMouse)
+    {
+        camera.zoom(yOffset);
+    }
 }
 
-void processInput(GLFWwindow *window)
+void keyboardCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
-        glfwSetWindowShouldClose(window, true);
+        imguiState.showMainWindow = !imguiState.showMainWindow;
     }
+    else
+    {
+        keyStates[key] = action != GLFW_RELEASE; // we want to treat GLFW_PRESS and GLFW_REPEAT as the same
+    }
+}
 
-    // Movements will be constantly interrupted, because key state changes from GLFW_PRESS to GLFW_REPEAT
-    // TODO: Store button states, for when they're held down or switch to event based input handling
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    {
-        camera.move(CameraDirection::FORWARD, deltaTime);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    {
-        camera.move(CameraDirection::BACKWARD, deltaTime);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    {
-        camera.move(CameraDirection::LEFT, deltaTime);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    {
-        camera.move(CameraDirection::RIGHT, deltaTime);
-    }
+void errorCallback(int error, const char *description)
+{
+    std::cerr << "Glfw Error " << error << ": " << description << std::endl;
 }

@@ -32,7 +32,13 @@ src = [
     'FpsCamera.cxx',
     'Mesh.cxx',
     'Shader.cxx',
-    'lib/glad/src/glad.c'
+    'lib/glad/src/glad.c',
+    'lib/imgui/imgui.cpp',
+    'lib/imgui/imgui_demo.cpp',
+    'lib/imgui/imgui_draw.cpp',
+    'lib/imgui/imgui_widgets.cpp',
+    'lib/imgui/imgui_impl_glfw.cpp',
+    'lib/imgui/imgui_impl_opengl3.cpp'
 ]
 
 incdirs = include_directories([
