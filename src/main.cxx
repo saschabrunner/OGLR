@@ -488,6 +488,20 @@ void moveCamera()
 
 void drawImgui()
 {
+    // depending on if any window is visible we need to either show or hide the cursor
+    int currentInputMode = glfwGetInputMode(window, GLFW_CURSOR);
+    bool imguiVisible =
+        imguiState.showMainWindow || imguiState.showDemoWindow;
+
+    if (imguiVisible && currentInputMode != GLFW_CURSOR_NORMAL)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+    else if (!imguiVisible && currentInputMode != GLFW_CURSOR_DISABLED)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+
     // start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -496,7 +510,7 @@ void drawImgui()
     // show the main debug window
     if (imguiState.showMainWindow)
     {
-        ImGui::Begin("Main");
+        ImGui::Begin("Main", &imguiState.showMainWindow);
 
         if (ImGui::Button("Show demo window"))
         {
