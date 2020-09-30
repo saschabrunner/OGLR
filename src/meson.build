@@ -28,7 +28,7 @@ deps = [
 src = [
     'main.cxx',
     'Camera.cxx',
-    'DataDirHelper.cxx',
+    'DirectoryHelper.cxx',
     'FpsCamera.cxx',
     'Mesh.cxx',
     'Shader.cxx',

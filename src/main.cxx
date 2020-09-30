@@ -20,7 +20,7 @@
 #include "lib/imgui/imgui_impl_glfw.h"
 #include "lib/imgui/imgui_impl_opengl3.h"
 
-#include "DataDirHelper.h"
+#include "DirectoryHelper.h"
 #include "Camera.h"
 #include "Shader.h"
 
@@ -66,10 +66,11 @@ Camera camera(glm::vec3(1.0f, 1.0f, 6.0f), glm::vec3(0.0f, 1.0f, 0.0f), -10.0f, 
 // TODO: Replace this with a more flexible keyboard/input handling class at some point
 std::unordered_map<int, bool> keyStates;
 
+DirectoryHelper &directoryHelper = DirectoryHelper::getInstance();
+
 int main()
 {
     init();
-    DataDirHelper &dataDirHelper = DataDirHelper::getInstance();
 
     // create two triangles with one vao for each
     // clang-format off
@@ -181,13 +182,13 @@ int main()
     glm::mat4 projection; // from view to clip space
 
     // Load diffuse map texture
-    GLuint diffuseMap = createTexture(dataDirHelper.locate("textures/container2.png"), GL_TEXTURE0, GL_REPEAT);
-    GLuint specularMap = createTexture(dataDirHelper.locate("textures/container2_specular.png"), GL_TEXTURE1, GL_REPEAT);
-    GLuint emissionMap = createTexture(dataDirHelper.locate("textures/matrix.jpg"), GL_TEXTURE2, GL_REPEAT);
+    GLuint diffuseMap = createTexture(directoryHelper.locateData("textures/container2.png"), GL_TEXTURE0, GL_REPEAT);
+    GLuint specularMap = createTexture(directoryHelper.locateData("textures/container2_specular.png"), GL_TEXTURE1, GL_REPEAT);
+    GLuint emissionMap = createTexture(directoryHelper.locateData("textures/matrix.jpg"), GL_TEXTURE2, GL_REPEAT);
 
     // create shader programs
     // note: path assumes that binary is in a subfolder of the project (bin/)
-    Shader lightingShader(dataDirHelper.locate("shaders/06_normalTexCoord.vert"), dataDirHelper.locate("shaders/06_multipleLights.frag"));
+    Shader lightingShader(directoryHelper.locateData("shaders/06_normalTexCoord.vert"), directoryHelper.locateData("shaders/06_multipleLights.frag"));
     lightingShader.setInt("material.diffuse", 0);
     lightingShader.setInt("material.specular", 1);
     lightingShader.setInt("material.emission", 2);
@@ -228,7 +229,7 @@ int main()
     lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f))); // going to be used for dot product, so use cos
     lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
 
-    Shader lightSourceShader(dataDirHelper.locate("shaders/04_normalCorrected.vert"), dataDirHelper.locate("shaders/04_color.frag"));
+    Shader lightSourceShader(directoryHelper.locateData("shaders/04_normalCorrected.vert"), directoryHelper.locateData("shaders/04_color.frag"));
     lightSourceShader.setFloat("iColor", 0.2f, 0.05f, 0.0f);
 
     // set up light VAO
@@ -380,14 +381,18 @@ void initGl()
 
 void initImgui()
 {
-    // Setup Dear ImGui context
+    // create imgui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
-    // Setup Dear ImGui style
+    // setup ini path
+    static std::string iniPath = directoryHelper.locateConfig("imgui.ini", true);
+    ImGui::GetIO().IniFilename = iniPath.c_str();
+
+    // configure style
     ImGui::StyleColorsDark();
 
-    // Setup Platform/Renderer bindings
+    // setup platform/renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 }
