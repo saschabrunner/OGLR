@@ -1,3 +1,6 @@
+#ifndef MESH_H
+#define MESH_H
+
 #include <vector>
 #include <glm/glm.hpp>
 
@@ -40,3 +43,5 @@ private:
 
     void setupMesh();
 };
+
+#endif
