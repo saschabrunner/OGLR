@@ -44,7 +44,7 @@ void Mesh::draw(Shader shader)
     int specularNr = 0;
     int emissionNr = 0;
 
-    for (int i = 0; i < textures.size(); i++)
+    for (std::size_t i = 0; i < textures.size(); i++)
     {
         glActiveTexture(GL_TEXTURE0 + i); // activate texture based on index
 

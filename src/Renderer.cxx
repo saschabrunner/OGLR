@@ -233,22 +233,22 @@ void Renderer::initScene()
 
     // create textures
     diffuseMap = createTexture(
-        DirectoryHelper::getInstance().locateData("textures/container2.png"),
+        directoryHelper.locateData("textures/container2.png"),
         GL_TEXTURE0,
         GL_REPEAT);
     specularMap = createTexture(
-        DirectoryHelper::getInstance().locateData("textures/container2_specular.png"),
+        directoryHelper.locateData("textures/container2_specular.png"),
         GL_TEXTURE1,
         GL_REPEAT);
     emissionMap = createTexture(
-        DirectoryHelper::getInstance().locateData("textures/matrix.jpg"),
+        directoryHelper.locateData("textures/matrix.jpg"),
         GL_TEXTURE2,
         GL_REPEAT);
 
     // configure shader programs
     lightingShader = std::unique_ptr<Shader>(new Shader(
-        DirectoryHelper::getInstance().locateData("shaders/06_normalTexCoord.vert"),
-        DirectoryHelper::getInstance().locateData("shaders/06_multipleLights.frag")));
+        directoryHelper.locateData("shaders/06_normalTexCoord.vert"),
+        directoryHelper.locateData("shaders/06_multipleLights.frag")));
     lightingShader->setInt("material.diffuse", 0);
     lightingShader->setInt("material.specular", 1);
     lightingShader->setInt("material.emission", 2);
@@ -261,7 +261,7 @@ void Renderer::initScene()
     lightingShader->setFloat("directionalLight.specular", 0.3f, 0.3f, 0.3f);
 
     // point lights
-    for (int i = 0; i < pointLightPositions.size(); i++)
+    for (std::size_t i = 0; i < pointLightPositions.size(); i++)
     {
         std::ostringstream pointLightIdentifier;
         pointLightIdentifier << "pointLights[" << i << "]";
@@ -414,7 +414,7 @@ void Renderer::drawScene()
     lightingShader->setFloat("projection", projection);
     lightingShader->setFloat("material.emissionVerticalOffset", -glfwGetTime() / 5.0);
 
-    for (int i = 0; i < pointLightPositions.size(); i++)
+    for (std::size_t i = 0; i < pointLightPositions.size(); i++)
     {
         std::ostringstream pointLightIdentifier;
         pointLightIdentifier << "pointLights[" << i << "].position";
@@ -432,7 +432,7 @@ void Renderer::drawScene()
 
     // draw cubes
     glBindVertexArray(vao);
-    for (int i = 0; i < cubePositions.size(); i++)
+    for (std::size_t i = 0; i < cubePositions.size(); i++)
     {
         model = glm::translate(identityMatrix, cubePositions[i]);
         model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
