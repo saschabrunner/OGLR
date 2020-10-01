@@ -9,6 +9,8 @@ public:
     // inherit constructors
     using Camera::Camera;
 
+    virtual ~FpsCamera();
+
     void move(CameraDirection direction, float deltaTime) override;
 };
 

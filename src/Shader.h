@@ -16,6 +16,8 @@ public:
     // constructor reads and builds the shader program
     Shader(const std::string &vertexShaderPath, const std::string &fragmentShaderPath);
 
+    virtual ~Shader();
+
     // use/activate the shader
     void use() const;
 

@@ -1,6 +1,9 @@
 #include "FpsCamera.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+
+FpsCamera::~FpsCamera() {}
+
 void FpsCamera::move(CameraDirection direction, float deltaTime)
 {
     const glm::vec3 &cameraFront = getFront();

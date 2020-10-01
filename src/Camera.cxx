@@ -54,6 +54,8 @@ Camera::Camera(float posX,
     lastY = 0.0f;
 }
 
+Camera::~Camera() {}
+
 glm::mat4 Camera::calculateView() const
 {
     // the view transformation matrix is calculated by

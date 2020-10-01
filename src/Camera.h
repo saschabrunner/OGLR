@@ -40,6 +40,7 @@ public:
            float sensitivity = 0.05f,
            float speed = 2.5f,
            float invertVertical = false);
+    virtual ~Camera();
 
     glm::mat4 calculateView() const;
     void zoom(float yOffset);
