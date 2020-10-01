@@ -32,6 +32,7 @@ src = [
     'FpsCamera.cxx',
     'Mesh.cxx',
     'Shader.cxx',
+    'Renderer.cxx',
     'lib/glad/src/glad.c',
     'lib/imgui/imgui.cpp',
     'lib/imgui/imgui_demo.cpp',
