@@ -2,11 +2,15 @@
 
 int main()
 {
-    Renderer renderer;
-
-    while (renderer.isRunning())
+    int initReturnCode = Renderer::init();
+    if (initReturnCode)
     {
-        renderer.renderFrame();
+        return initReturnCode;
+    }
+
+    while (Renderer::isRunning())
+    {
+        Renderer::renderFrame();
     }
 
     return 0;
