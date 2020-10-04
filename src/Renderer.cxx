@@ -52,7 +52,8 @@ namespace
 
     struct
     {
-        glm::vec3 direction{-0.2f, -1.0f, -0.3f};
+        glm::vec3 direction;                           // direction of light in view space (calculated every frame)
+        glm::vec3 worldDirection{-0.2f, -1.0f, -0.3f}; // direction of light in world space
         glm::vec3 ambient{0.02f, 0.02f, 0.02f};
         glm::vec3 diffuse{0.08f, 0.08f, 0.08f};
         glm::vec3 specular{0.3f, 0.3f, 0.3f};
@@ -60,7 +61,7 @@ namespace
 
     struct
     {
-        glm::vec3 cubeColor{0.2f, 0.05f, 0.0f}; // color it is represented in in the scene
+        glm::vec3 cubeColor{0.2f, 0.05f, 0.0f}; // color it is represented with in the scene
         glm::vec3 ambient{0.03f, 0.008f, 0.0f};
         glm::vec3 diffuse{0.2f, 0.05f, 0.0f};
         glm::vec3 specular{1.0f, 1.0f, 1.0f};
@@ -72,7 +73,7 @@ namespace
     struct
     {
         glm::vec3 position{0.0f, 0.0f, 0.0f};
-        glm::vec3 direction{0.0f, 0.0f, -1.0f};
+        glm::vec3 direction{0.0f, 0.0f, -1.0f}; // direction of spotlight in view space
         glm::vec3 ambient{0.0f, 0.0f, 0.0f};
         glm::vec3 diffuse{1.0f, 1.0f, 1.0f};
         glm::vec3 specular{1.0f, 1.0f, 1.0f};
@@ -338,7 +339,6 @@ namespace
         lightingShader->setFloat("material.shininess", material.shininess);
 
         // directional light
-        lightingShader->setFloat("directionalLight.direction", directionalLight.direction);
         lightingShader->setFloat("directionalLight.ambient", directionalLight.ambient);
         lightingShader->setFloat("directionalLight.diffuse", directionalLight.diffuse);
         lightingShader->setFloat("directionalLight.specular", directionalLight.specular);
@@ -490,8 +490,16 @@ namespace
         lightingShader->use();
         lightingShader->setFloat("view", view);
         lightingShader->setFloat("projection", projection);
+
+        // move emission texture based on time for a cool effect 😎
         lightingShader->setFloat("material.emissionVerticalOffset", -glfwGetTime() / 5.0);
 
+        // calculate the direction of the directional light in view space
+        directionalLight.direction =
+            glm::normalize(glm::vec3(view * glm::vec4(directionalLight.worldDirection, 0.0)));
+        lightingShader->setFloat("directionalLight.direction", directionalLight.direction);
+
+        // calculate the view positions of the point lights
         for (std::size_t i = 0; i < pointLightPositions.size(); i++)
         {
             std::ostringstream pointLightIdentifier;
@@ -599,13 +607,18 @@ namespace
                     lightingShader->setFloat("directionalLight.specular", directionalLight.specular);
                 }
 
-                if (ImGui::DragFloat3("Direction##Directional light",
-                                      glm::value_ptr(directionalLight.direction),
+                if (ImGui::DragFloat3("Direction (world space)##Directional light",
+                                      glm::value_ptr(directionalLight.worldDirection),
                                       0.01f, -1.0f, 1.0f))
                 {
-                    lightingShader->setFloat(
-                        "directionalLight.direction", directionalLight.direction);
+                    // no need to update the shader
+                    // the view direction of the light will be calculated next frame automatically
                 }
+
+                ImGui::Text("Direction: x:%f y:%f z:%f",
+                            directionalLight.direction.x,
+                            directionalLight.direction.y,
+                            directionalLight.direction.z);
 
                 if (ImGui::ColorEdit3("Ambient##Directional light",
                                       glm::value_ptr(directionalLight.ambient)))
