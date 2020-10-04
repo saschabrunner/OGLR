@@ -35,12 +35,53 @@ namespace
     // reusable identity transformation matrix
     const glm::mat4 identityMatrix(1.0);
 
+    glm::vec4 clearColor{0.3f, 0.1f, 0.0f, 1.0f};
+
     // imgui state
     struct
     {
         bool showMainWindow{false};
         bool showDemoWindow{false};
     } imguiState;
+
+    // shader uniforms state
+    struct
+    {
+        float shininess{32.0f};
+    } material;
+
+    struct
+    {
+        glm::vec3 direction{-0.2f, -1.0f, -0.3f};
+        glm::vec3 ambient{0.02f, 0.02f, 0.02f};
+        glm::vec3 diffuse{0.08f, 0.08f, 0.08f};
+        glm::vec3 specular{0.3f, 0.3f, 0.3f};
+    } directionalLight;
+
+    struct
+    {
+        glm::vec3 cubeColor{0.2f, 0.05f, 0.0f}; // color it is represented in in the scene
+        glm::vec3 ambient{0.03f, 0.008f, 0.0f};
+        glm::vec3 diffuse{0.2f, 0.05f, 0.0f};
+        glm::vec3 specular{1.0f, 1.0f, 1.0f};
+        float constant{1.0f};
+        float linear{0.14f};
+        float quadratic{0.07f};
+    } pointLight;
+
+    struct
+    {
+        glm::vec3 position{0.0f, 0.0f, 0.0f};
+        glm::vec3 direction{0.0f, 0.0f, -1.0f};
+        glm::vec3 ambient{0.0f, 0.0f, 0.0f};
+        glm::vec3 diffuse{1.0f, 1.0f, 1.0f};
+        glm::vec3 specular{1.0f, 1.0f, 1.0f};
+        float constant{1.0f};
+        float linear{0.09f};
+        float quadratic{0.032f};
+        float cutOff{glm::cos(glm::radians(12.5f))}; // used for dot product, so use cos
+        float outerCutOff{glm::cos(glm::radians(15.0f))};
+    } spotLight;
 
     GLFWwindow *window;
     GLuint curWidth{DEFAULT_WIDTH};
@@ -86,6 +127,9 @@ namespace
     void moveCamera();
     void drawScene();
     void drawImgui();
+
+    template <class T>
+    void updatePointLightAttribute(std::string attribute, T &value);
 
     void framebufferSizeCallback(GLFWwindow *window, int width, int height);
     void mouseCallback(GLFWwindow *window, double xPos, double yPos);
@@ -145,7 +189,7 @@ namespace
 
         // set clear color (background color)
         // state setting, call once
-        glClearColor(.01f, .01f, .01f, 1.0f);
+        glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
     }
 
     void initImgui()
@@ -178,7 +222,7 @@ namespace
              0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
              0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
              0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-            -0.5f ,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+            -0.5f , 0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
             -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 
             -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
@@ -291,48 +335,46 @@ namespace
         lightingShader->setInt("material.diffuse", 0);
         lightingShader->setInt("material.specular", 1);
         lightingShader->setInt("material.emission", 2);
-        lightingShader->setFloat("material.shininess", 32.0f);
+        lightingShader->setFloat("material.shininess", material.shininess);
 
         // directional light
-        lightingShader->setFloat("directionalLight.direction", -0.2f, -1.0f, -0.3f);
-        lightingShader->setFloat("directionalLight.ambient", 0.02f, 0.02f, 0.02f);
-        lightingShader->setFloat("directionalLight.diffuse", 0.08f, 0.08f, 0.08f);
-        lightingShader->setFloat("directionalLight.specular", 0.3f, 0.3f, 0.3f);
+        lightingShader->setFloat("directionalLight.direction", directionalLight.direction);
+        lightingShader->setFloat("directionalLight.ambient", directionalLight.ambient);
+        lightingShader->setFloat("directionalLight.diffuse", directionalLight.diffuse);
+        lightingShader->setFloat("directionalLight.specular", directionalLight.specular);
 
         // point lights
         for (std::size_t i = 0; i < pointLightPositions.size(); i++)
         {
             std::ostringstream pointLightIdentifier;
             pointLightIdentifier << "pointLights[" << i << "]";
-            std::string pointLight = pointLightIdentifier.str();
-            lightingShader->setFloat(pointLight + ".ambient", 0.03f, 0.008f, 0.0f);
-            lightingShader->setFloat(pointLight + ".diffuse", 0.2f, 0.05f, 0.0f);
-            lightingShader->setFloat(pointLight + ".specular", 1.0f, 1.0f, 1.0f);
-            lightingShader->setFloat(pointLight + ".constant", 1.0f);
-            lightingShader->setFloat(pointLight + ".linear", 0.14f);
-            lightingShader->setFloat(pointLight + ".quadratic", 0.07f);
+            std::string pointLightIdentifierStr = pointLightIdentifier.str();
+            lightingShader->setFloat(pointLightIdentifierStr + ".ambient", pointLight.ambient);
+            lightingShader->setFloat(pointLightIdentifierStr + ".diffuse", pointLight.diffuse);
+            lightingShader->setFloat(pointLightIdentifierStr + ".specular", pointLight.specular);
+            lightingShader->setFloat(pointLightIdentifierStr + ".constant", pointLight.constant);
+            lightingShader->setFloat(pointLightIdentifierStr + ".linear", pointLight.linear);
+            lightingShader->setFloat(pointLightIdentifierStr + ".quadratic", pointLight.quadratic);
         }
 
         // spotlight
         // we are simulating a flashlight that's shining from the player's viewpoint
-        glm::vec3 spotLightViewPosition(0.0f, 0.0f, 0.0f);
-        glm::vec3 spotLightViewDirection(0.0f, 0.0f, -1.0f);
-        lightingShader->setFloat("spotLight.position", spotLightViewPosition);
-        lightingShader->setFloat("spotLight.direction", spotLightViewDirection);
-        lightingShader->setFloat("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-        lightingShader->setFloat("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-        lightingShader->setFloat("spotLight.specular", 1.0f, 1.0f, 1.0f);
-        lightingShader->setFloat("spotLight.constant", 1.0f);
-        lightingShader->setFloat("spotLight.linear", 0.09f);
-        lightingShader->setFloat("spotLight.quadratic", 0.032f);
-        lightingShader->setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f))); // going to be used for dot product, so use cos
-        lightingShader->setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+        lightingShader->setFloat("spotLight.position", spotLight.position);
+        lightingShader->setFloat("spotLight.direction", spotLight.direction);
+        lightingShader->setFloat("spotLight.ambient", spotLight.ambient);
+        lightingShader->setFloat("spotLight.diffuse", spotLight.diffuse);
+        lightingShader->setFloat("spotLight.specular", spotLight.specular);
+        lightingShader->setFloat("spotLight.constant", spotLight.constant);
+        lightingShader->setFloat("spotLight.linear", spotLight.linear);
+        lightingShader->setFloat("spotLight.quadratic", spotLight.quadratic);
+        lightingShader->setFloat("spotLight.cutOff", spotLight.cutOff);
+        lightingShader->setFloat("spotLight.outerCutOff", spotLight.outerCutOff);
 
         // shader for the light source cubes
         lightSourceShader = std::unique_ptr<Shader>(new Shader(
             DirectoryHelper::getInstance().locateData("shaders/04_normalCorrected.vert"),
             DirectoryHelper::getInstance().locateData("shaders/04_color.frag")));
-        lightSourceShader->setFloat("iColor", 0.2f, 0.05f, 0.0f);
+        lightSourceShader->setFloat("iColor", pointLight.cubeColor);
 
         // set up light VAO
         glGenVertexArrays(1, &lightVao);
@@ -521,9 +563,189 @@ namespace
         {
             ImGui::Begin("Main", &imguiState.showMainWindow);
 
+            if (ImGui::ColorEdit4("Clear color", glm::value_ptr(clearColor)))
+            {
+                glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+            }
+
             if (ImGui::Button("Show demo window"))
             {
                 imguiState.showDemoWindow = !imguiState.showDemoWindow;
+            }
+
+            if (ImGui::CollapsingHeader("Material"))
+            {
+                if (ImGui::SliderFloat("Shininess##Material",
+                                       &material.shininess,
+                                       0.0f,
+                                       128.0f,
+                                       NULL,
+                                       ImGuiSliderFlags_Logarithmic))
+                {
+                    lightingShader->setFloat("material.shininess", material.shininess);
+                }
+            }
+
+            if (ImGui::CollapsingHeader("Directional light"))
+            {
+                if (ImGui::Button("Turn off##Directional light"))
+                {
+                    glm::vec3 zero(0.0f);
+                    directionalLight.ambient = zero;
+                    directionalLight.diffuse = zero;
+                    directionalLight.specular = zero;
+                    lightingShader->setFloat("directionalLight.ambient", directionalLight.ambient);
+                    lightingShader->setFloat("directionalLight.diffuse", directionalLight.diffuse);
+                    lightingShader->setFloat("directionalLight.specular", directionalLight.specular);
+                }
+
+                if (ImGui::DragFloat3("Direction##Directional light",
+                                      glm::value_ptr(directionalLight.direction),
+                                      0.01f, -1.0f, 1.0f))
+                {
+                    lightingShader->setFloat(
+                        "directionalLight.direction", directionalLight.direction);
+                }
+
+                if (ImGui::ColorEdit3("Ambient##Directional light",
+                                      glm::value_ptr(directionalLight.ambient)))
+                {
+                    lightingShader->setFloat("directionalLight.ambient", directionalLight.ambient);
+                }
+
+                if (ImGui::ColorEdit3("Diffuse##Directional light",
+                                      glm::value_ptr(directionalLight.diffuse)))
+                {
+                    lightingShader->setFloat("directionalLight.diffuse", directionalLight.diffuse);
+                }
+
+                if (ImGui::ColorEdit3("Specular##Directional light",
+                                      glm::value_ptr(directionalLight.specular)))
+                {
+                    lightingShader->setFloat(
+                        "directionalLight.specular", directionalLight.specular);
+                }
+            }
+
+            if (ImGui::CollapsingHeader("Point lights"))
+            {
+                if (ImGui::Button("Turn off##Point lights"))
+                {
+                    glm::vec3 zero(0.0f);
+                    pointLight.ambient = zero;
+                    pointLight.diffuse = zero;
+                    pointLight.specular = zero;
+                    updatePointLightAttribute("ambient", pointLight.ambient);
+                    updatePointLightAttribute("diffuse", pointLight.diffuse);
+                    updatePointLightAttribute("specular", pointLight.specular);
+                }
+
+                if (ImGui::ColorEdit3("Cube color##Point lights",
+                                      glm::value_ptr(pointLight.cubeColor)))
+                {
+                    lightSourceShader->setFloat("iColor", pointLight.cubeColor);
+                }
+
+                if (ImGui::ColorEdit3("Ambient##Point lights", glm::value_ptr(pointLight.ambient)))
+                {
+                    updatePointLightAttribute("ambient", pointLight.ambient);
+                }
+
+                if (ImGui::ColorEdit3("Diffuse##Point lights", glm::value_ptr(pointLight.diffuse)))
+                {
+                    updatePointLightAttribute("diffuse", pointLight.diffuse);
+                }
+
+                if (ImGui::ColorEdit3("Specular##Point lights",
+                                      glm::value_ptr(pointLight.specular)))
+                {
+                    updatePointLightAttribute("specular", pointLight.specular);
+                }
+
+                if (ImGui::DragFloat(
+                        "Constant##Point lights", &pointLight.constant, 0.01f, 0.0f, 200.0f))
+                {
+                    updatePointLightAttribute("constant", pointLight.constant);
+                }
+
+                if (ImGui::DragFloat("Linear##Point lights", &pointLight.linear,
+                                     0.001f, 0.0f, 1.0f))
+                {
+                    updatePointLightAttribute("linear", pointLight.linear);
+                }
+
+                if (ImGui::DragFloat(
+                        "Quadratic##Point lights", &pointLight.quadratic, 0.001f, 0.0f, 1.0f))
+                {
+                    updatePointLightAttribute("quadratic", pointLight.quadratic);
+                }
+            }
+
+            if (ImGui::CollapsingHeader("Spotlight"))
+            {
+                if (ImGui::Button("Turn off##Spotlight"))
+                {
+                    glm::vec3 zero(0.0f);
+                    spotLight.ambient = zero;
+                    spotLight.diffuse = zero;
+                    spotLight.specular = zero;
+                    lightingShader->setFloat("spotLight.ambient", spotLight.ambient);
+                    lightingShader->setFloat("spotLight.diffuse", spotLight.diffuse);
+                    lightingShader->setFloat("spotLight.specular", spotLight.specular);
+                }
+
+                ImGui::Text("Position: x:%f y:%f z:%f",
+                            spotLight.position.x,
+                            spotLight.position.y,
+                            spotLight.position.z);
+
+                ImGui::Text("Direction: x:%f y:%f z:%f",
+                            spotLight.direction.x,
+                            spotLight.direction.y,
+                            spotLight.direction.z);
+
+                if (ImGui::ColorEdit3("Ambient##Spotlight", glm::value_ptr(spotLight.ambient)))
+                {
+                    lightingShader->setFloat("spotLight.ambient", spotLight.ambient);
+                }
+
+                if (ImGui::ColorEdit3("Diffuse##Spotlight", glm::value_ptr(spotLight.diffuse)))
+                {
+                    lightingShader->setFloat("spotLight.diffuse", spotLight.diffuse);
+                }
+
+                if (ImGui::ColorEdit3("Specular##Spotlight", glm::value_ptr(spotLight.specular)))
+                {
+                    lightingShader->setFloat("spotLight.specular", spotLight.specular);
+                }
+
+                if (ImGui::DragFloat(
+                        "Constant##Spotlight", &spotLight.constant, 0.01f, 0.0f, 200.0f))
+                {
+                    lightingShader->setFloat("spotLight.constant", spotLight.constant);
+                }
+
+                if (ImGui::DragFloat("Linear##Spotlight", &spotLight.linear, 0.001f, 0.0f, 1.0f))
+                {
+                    lightingShader->setFloat("spotLight.linear", spotLight.linear);
+                }
+
+                if (ImGui::DragFloat(
+                        "Quadratic##Spotlight", &spotLight.quadratic, 0.001f, 0.0f, 1.0f))
+                {
+                    lightingShader->setFloat("spotLight.quadratic", spotLight.quadratic);
+                }
+
+                if (ImGui::DragFloat("Cut Off##Spotlight", &spotLight.cutOff, 0.001f, 0.0f, 1.0f))
+                {
+                    lightingShader->setFloat("spotLight.cutOff", spotLight.cutOff);
+                }
+
+                if (ImGui::DragFloat(
+                        "Outer Cut Off##Spotlight", &spotLight.outerCutOff, 0.001f, 0.0f, 1.0f))
+                {
+                    lightingShader->setFloat("spotLight.outerCutOff", spotLight.outerCutOff);
+                }
             }
 
             if (ImGui::Button("Quit"))
@@ -544,6 +766,17 @@ namespace
         // draw imgui
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    }
+
+    template <class T>
+    void updatePointLightAttribute(std::string attribute, T &value)
+    {
+        // apply an attribute to all point lights
+        for (std::size_t i = 0; i < pointLightPositions.size(); i++)
+        {
+            std::string identifier = "pointLights[" + std::to_string(i) + "]." + attribute;
+            lightingShader->setFloat(identifier, value);
+        }
     }
 
     void framebufferSizeCallback(GLFWwindow *window, int width, int height)
