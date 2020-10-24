@@ -535,7 +535,7 @@ namespace
 
         // draw light sources
         glBindVertexArray(lightVao);
-        for (glm::vec3 pointLightPosition : pointLightPositions)
+        for (glm::vec3 &pointLightPosition : pointLightPositions)
         {
             model = glm::translate(identityMatrix, pointLightPosition);
             model = glm::scale(model, glm::vec3(0.2f));

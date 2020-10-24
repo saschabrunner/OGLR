@@ -11,7 +11,7 @@ DirectoryHelper::DirectoryHelper()
 {
     // add data dirs based on glib enumerated paths
     std::vector<std::string> systemDataDirs = Glib::get_system_data_dirs();
-    for (std::string systemDataDir : systemDataDirs)
+    for (const std::string &systemDataDir : systemDataDirs)
     {
         dataPaths.push_back(systemDataDir + "/" PROJECT_NAME "/");
     }
@@ -42,7 +42,7 @@ DirectoryHelper::DirectoryHelper()
     }
 
     std::vector<std::string> systemConfigDirs = Glib::get_system_config_dirs();
-    for (std::string systemConfigDir : systemConfigDirs)
+    for (const std::string &systemConfigDir : systemConfigDirs)
     {
         configPaths.push_back(systemConfigDir + "/" PROJECT_NAME "/");
     }
@@ -56,7 +56,7 @@ DirectoryHelper &DirectoryHelper::getInstance()
 
 std::string DirectoryHelper::locateData(const std::string &fileName) const
 {
-    for (std::string dataPath : dataPaths)
+    for (const std::string &dataPath : dataPaths)
     {
         std::string filePath = dataPath + fileName;
         if (boost::filesystem::exists(filePath))
@@ -71,7 +71,7 @@ std::string DirectoryHelper::locateData(const std::string &fileName) const
 std::string DirectoryHelper::locateConfig(
     const std::string &fileName, bool suggestIfNotFound) const
 {
-    for (std::string configPath : configPaths)
+    for (const std::string &configPath : configPaths)
     {
         std::string filePath = configPath + fileName;
         if (boost::filesystem::exists(filePath))
