@@ -42,7 +42,7 @@ void Mesh::draw(Shader shader)
 {
     int diffuseNr = 0;
     int specularNr = 0;
-    int emissionNr = 0;
+    int emissiveNr = 0;
 
     for (std::size_t i = 0; i < textures.size(); i++)
     {
@@ -57,11 +57,11 @@ void Mesh::draw(Shader shader)
             break;
         case TextureType::specular:
             uniformName = "textureSpecular" + std::to_string(specularNr);
-            specularNr = 0;
+            specularNr++;
             break;
-        case TextureType::emission:
-            uniformName = "textureEmission" + std::to_string(emissionNr);
-            emissionNr++;
+        case TextureType::emissive:
+            uniformName = "textureEmissive" + std::to_string(emissiveNr);
+            emissiveNr++;
             break;
         default:
             std::cerr << "Unknown texture type: "

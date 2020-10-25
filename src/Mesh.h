@@ -10,7 +10,7 @@ enum class TextureType
 {
     diffuse,
     specular,
-    emission
+    emissive
 };
 
 struct Vertex
@@ -24,6 +24,7 @@ struct Texture
 {
     GLuint id;
     TextureType type;
+    std::string path;
 };
 
 class Mesh

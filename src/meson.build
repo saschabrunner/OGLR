@@ -20,6 +20,7 @@ deps = [
     libdl,
     dependency('glfw3'),
     dependency('assimp'),
+    dependency('minizip'), # assimp needs that for static builds
     dependency('gl'),
     dependency('glibmm-2.4'),
     dependency('boost', modules : ['system', 'filesystem'])
@@ -31,6 +32,7 @@ src = [
     'DirectoryHelper.cxx',
     'FpsCamera.cxx',
     'Mesh.cxx',
+    'Model.cxx',
     'Shader.cxx',
     'Renderer.cxx',
     'lib/glad/src/glad.c',
