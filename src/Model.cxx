@@ -1,3 +1,5 @@
+#define STB_IMAGE_IMPLEMENTATION // stb_image.h one time initialization
+
 #include "Model.h"
 
 #include <assimp/Importer.hpp>
@@ -32,7 +34,7 @@ void Model::loadModel(const std::string &path)
         return;
     }
 
-    directory = Glib::path_get_dirname(path);
+    baseDir = Glib::path_get_dirname(path);
 
     processNode(scene->mRootNode, scene);
 }
@@ -134,22 +136,22 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *material, aiTexture
         {
             // new texture, needs to be loaded
             Texture texture;
-            texture.id = loadTextureFromFile(stdPath, directory);
+            texture.id = loadTextureFromFile(stdPath, baseDir);
             texture.type = type;
             texture.path = stdPath;
             textures.push_back(texture);
+            loadedTextureByPath.insert({stdPath, texture});
         }
     }
 
     return textures;
 }
 
-GLuint Model::loadTextureFromFile(const std::string &path, const std::string &directory,
+GLuint Model::loadTextureFromFile(const std::string &texturePath, const std::string &baseDir,
                                   bool gamma, GLint wrappingMode)
 {
-    // path from assimp apparently only contains the filename
-    // TODO: Check if can be improved
-    std::string fullPath = directory + '/' + path;
+    // texture paths are provided as relative paths to the model
+    std::string path = baseDir + '/' + texturePath;
 
     // make sure the image is loaded in a way that represents OpenGL texture coordinates
     stbi_set_flip_vertically_on_load(true);

@@ -23,7 +23,7 @@ public:
 
 private:
     std::vector<Mesh> meshes;
-    std::string directory;
+    std::string baseDir;
     std::unordered_map<std::string, Texture> loadedTextureByPath;
 
     void loadModel(const std::string &path);
@@ -32,7 +32,7 @@ private:
     std::vector<Texture> loadMaterialTextures(aiMaterial *material, aiTextureType aiType,
                                               TextureType type);
 
-    static GLuint loadTextureFromFile(const std::string &path, const std::string &directory,
+    static GLuint loadTextureFromFile(const std::string &texturePath, const std::string &baseDir,
                                       bool gamma = false, GLint wrappingMode = GL_REPEAT);
 };
 

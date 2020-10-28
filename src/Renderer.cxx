@@ -1,7 +1,6 @@
 #include "Renderer.h"
 
-#define GLFW_INCLUDE_NONE        // Hinder GLFW from including gl headers, since glad does that for us
-#define STB_IMAGE_IMPLEMENTATION // stb_image.h one time initialization
+#define GLFW_INCLUDE_NONE // Hinder GLFW from including gl headers, since glad does that for us
 
 #include <memory>
 #include <string>
@@ -15,8 +14,6 @@
 
 #include "lib/glad/include/glad/glad.h"
 
-#include "lib/stb_image.h"
-
 // imgui
 #include "lib/imgui/imgui.h"
 #include "lib/imgui/imgui_impl_glfw.h"
@@ -24,6 +21,7 @@
 
 #include "Camera.h"
 #include "DirectoryHelper.h"
+#include "Model.h"
 #include "Shader.h"
 
 namespace
@@ -35,7 +33,7 @@ namespace
     // reusable identity transformation matrix
     const glm::mat4 identityMatrix(1.0);
 
-    glm::vec4 clearColor{0.3f, 0.1f, 0.0f, 1.0f};
+    glm::vec4 clearColor{0.0f, 0.0f, 0.0f, 1.0f};
 
     // imgui state
     struct
@@ -61,9 +59,9 @@ namespace
 
     struct
     {
-        glm::vec3 cubeColor{0.2f, 0.05f, 0.0f}; // color it is represented with in the scene
-        glm::vec3 ambient{0.03f, 0.008f, 0.0f};
-        glm::vec3 diffuse{0.2f, 0.05f, 0.0f};
+        glm::vec3 cubeColor{0.7f, 0.7f, 0.7f}; // color it is represented with in the scene
+        glm::vec3 ambient{0.05f, 0.05f, 0.05f};
+        glm::vec3 diffuse{0.2f, 0.2f, 0.2f};
         glm::vec3 specular{1.0f, 1.0f, 1.0f};
         float constant{1.0f};
         float linear{0.14f};
@@ -108,13 +106,8 @@ namespace
     std::vector<glm::vec3> cubePositions;
     std::vector<glm::vec3> pointLightPositions;
 
-    GLuint vao;
     GLuint lightVao;
-
-    // textures
-    GLuint diffuseMap;
-    GLuint specularMap;
-    GLuint emissionMap;
+    std::unique_ptr<Model> backpack;
 
     // prototypes
     int initGlfw();
@@ -122,8 +115,6 @@ namespace
     void initGl();
     void initImgui();
     void initScene();
-
-    GLuint createTexture(const std::string &path, GLenum glTextureIndex, GLint wrappingMode);
 
     void moveCamera();
     void drawScene();
@@ -215,8 +206,8 @@ namespace
     {
         DirectoryHelper &directoryHelper = DirectoryHelper::getInstance();
 
-        // create two triangles with one vao for each
         // clang-format off
+        // certices for a cube
         GLfloat vertices[] = {
             // position           normal               texture coords
             -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -262,19 +253,6 @@ namespace
             -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
         };
 
-        cubePositions = {
-            glm::vec3( 0.0f,  0.0f,  0.0f),
-            glm::vec3( 2.0f,  5.0f, -15.0f),
-            glm::vec3(-1.5f, -2.2f, -2.5f),
-            glm::vec3(-3.8f, -2.0f, -12.3f),
-            glm::vec3( 2.4f, -0.4f, -3.5f),
-            glm::vec3(-1.7f,  3.0f, -7.5f),
-            glm::vec3( 1.3f, -2.0f, -2.5f),
-            glm::vec3( 1.5f,  2.0f, -2.5f),
-            glm::vec3( 1.5f,  0.2f, -1.5f),
-            glm::vec3(-1.3f,  1.0f, -1.5f)
-        };
-
         pointLightPositions = {
             glm::vec3( 0.7f,  0.2f,  2.0f),
             glm::vec3( 2.3f, -3.3f, -4.0f),
@@ -283,59 +261,10 @@ namespace
         };
         // clang-format on
 
-        // vertex array object
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
-
-        // vertex buffer object
-        GLuint vbo;
-        glGenBuffers(1, &vbo);
-        // note: glBindBuffer does not affect the vao when binding to GL_ARRAY_BUFFER! glVertexAttribPointer will!
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-        // copy vertex data into buffer
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-        // position attribute (location = 0)
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void *)0);
-        glEnableVertexAttribArray(0);
-
-        // normal attribute (location = 1)
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
-        glEnableVertexAttribArray(1);
-
-        // texture coordinates (location = 2)
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void *)(6 * sizeof(GLfloat)));
-        glEnableVertexAttribArray(2);
-
-        // we can unbind the buffer, since we just registered it to the vao
-        // note: this is only allowed for GL_ARRAY_BUFFER, otherwise this would affect the vao state!
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        // and we can also unbind the array object, since we finished setting it up
-        glBindVertexArray(0);
-
-        // create textures
-        diffuseMap = createTexture(
-            directoryHelper.locateData("textures/container2.png"),
-            GL_TEXTURE0,
-            GL_REPEAT);
-        specularMap = createTexture(
-            directoryHelper.locateData("textures/container2_specular.png"),
-            GL_TEXTURE1,
-            GL_REPEAT);
-        emissionMap = createTexture(
-            directoryHelper.locateData("textures/matrix.jpg"),
-            GL_TEXTURE2,
-            GL_REPEAT);
-
         // configure shader programs
         lightingShader = std::unique_ptr<Shader>(new Shader(
             directoryHelper.locateData("shaders/06_normalTexCoord.vert"),
             directoryHelper.locateData("shaders/06_multipleLights.frag")));
-        lightingShader->setInt("material.diffuse", 0);
-        lightingShader->setInt("material.specular", 1);
-        lightingShader->setInt("material.emission", 2);
         lightingShader->setFloat("material.shininess", material.shininess);
 
         // directional light
@@ -376,10 +305,18 @@ namespace
             DirectoryHelper::getInstance().locateData("shaders/04_color.frag")));
         lightSourceShader->setFloat("iColor", pointLight.cubeColor);
 
+        // create buffer for cube data (note: GL_ARRAY_BUFFER is independent of vao)
+        GLuint vbo;
+        glGenBuffers(1, &vbo);
+        // note: glBindBuffer does not affect the vao when binding to GL_ARRAY_BUFFER! glVertexAttribPointer will!
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        // copy vertex data into buffer
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
         // set up light VAO
         glGenVertexArrays(1, &lightVao);
         glBindVertexArray(lightVao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        // actually link buffer data to vao
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void *)0);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -391,67 +328,9 @@ namespace
             glm::vec3(0.0f, 1.0f, 0.0f),
             -10.0f,
             -100.0f));
-    }
 
-    GLuint createTexture(const std::string &path, GLenum glTextureUnit, GLint wrappingMode)
-    {
-        // make sure the image is loaded in a way that represents OpenGL texture coordinates
-        stbi_set_flip_vertically_on_load(true);
-
-        // read image into byte array
-        int width, height, nrChannels;
-        unsigned char *textureData = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
-
-        if (!textureData)
-        {
-            std::cerr << "Could not read texture from '" << path << "'" << std::endl;
-            return -1;
-        }
-
-        GLenum format;
-
-        if (nrChannels == 1)
-        {
-            format = GL_RED;
-        }
-        else if (nrChannels == 3)
-        {
-            format = GL_RGB;
-        }
-        else if (nrChannels == 4)
-        {
-            format = GL_RGBA;
-        }
-        else
-        {
-            std::cerr << "Unexpected number of channels: " << nrChannels << std::endl;
-            return -1;
-        }
-
-        // create texture
-        GLuint texture;
-        glGenTextures(1, &texture);
-
-        // activate first texture unit and bind texture to it
-        glActiveTexture(glTextureUnit);
-        glBindTexture(GL_TEXTURE_2D, texture);
-
-        // set texture attributes (repeat and use linear filtering)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrappingMode);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappingMode);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        // copy texture data
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, textureData);
-
-        // let OpenGL generate mipmaps for us
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        // free the texture data again
-        stbi_image_free(textureData);
-
-        return texture;
+        backpack = std::unique_ptr<Model>(
+            new Model(directoryHelper.locateData("objects/backpack/backpack.obj")));
     }
 
     void moveCamera()
@@ -508,25 +387,11 @@ namespace
             lightingShader->setFloat(pointLightIdentifier.str(), viewPosition);
         }
 
-        // bind textures
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specularMap);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, emissionMap);
-
-        // draw cubes
-        glBindVertexArray(vao);
-        for (std::size_t i = 0; i < cubePositions.size(); i++)
-        {
-            model = glm::translate(identityMatrix, cubePositions[i]);
-            model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
-            lightingShader->setFloat("model", model);
-
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-        glBindVertexArray(0);
+        // draw backpack
+        model = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        lightingShader->setFloat("model", model);
+        backpack->draw(*lightingShader);
 
         // update light shader
         lightSourceShader->use();

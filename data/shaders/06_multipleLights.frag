@@ -6,10 +6,10 @@
  * structs
  */
 struct Material {
-    sampler2D diffuse;
-    sampler2D specular;
-    sampler2D emission;
-    float emissionVerticalOffset;
+    sampler2D textureDiffuse0;
+    sampler2D textureSpecular0;
+    // sampler2D textureEmissive0;
+    // float emissiveVerticalOffset;
     float shininess;
 };
 
@@ -66,14 +66,14 @@ out vec4 color;
 
 uniform Material material;
 uniform DirectionalLight directionalLight;
-uniform PointLight pointLights[NR_POINT_LIGHTS];    // TODO: Make this dynamic sized?
+uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform SpotLight spotLight;
 
 void main()
 {
     vec3 normalizedNormal = normalize(normal);
     vec3 viewDirection = normalize(-fragmentViewPosition);
-    vec3 specularTexel = vec3(texture(material.specular, textureCoordinates));
+    vec3 specularTexel = vec3(texture(material.textureSpecular0, textureCoordinates));
 
     vec3 result = vec3(0.0);
 
@@ -89,7 +89,7 @@ void main()
     // vec3 emission;
     // if (specularTexel.r == 0.0) 
     // {
-    //     vec2 emissionTextureCoordinates = vec2(textureCoordinates.x, textureCoordinates.y + material.emissionVerticalOffset);
+    //     vec2 emissionTextureCoordinates = vec2(textureCoordinates.x, textureCoordinates.y + material.emissiveVerticalOffset);
     //     result += vec3(texture(material.emission, emissionTextureCoordinates));
     // }
     
@@ -98,12 +98,12 @@ void main()
 
 vec3 calculateDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDirection, vec3 specularTexel) {
     // ambient
-    vec3 ambient = light.ambient * vec3(texture(material.diffuse, textureCoordinates));
+    vec3 ambient = light.ambient * vec3(texture(material.textureDiffuse0, textureCoordinates));
 
     // diffuse
     vec3 lightDirection = normalize(-light.direction);
     float lightAngle = max(dot(normal, lightDirection), 0.0); // take max, because value becomes negative if angle is over 90 degrees
-    vec3 diffuse = light.diffuse * lightAngle * vec3(texture(material.diffuse, textureCoordinates));
+    vec3 diffuse = light.diffuse * lightAngle * vec3(texture(material.textureDiffuse0, textureCoordinates));
 
     // specular
     // reflect needs the light direction to be from the light to the fragment, not the other way around so we negate it
@@ -123,12 +123,12 @@ vec3 calculatePointLight(PointLight light, vec3 normal, vec3 fragmentViewPositio
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
 
     // ambient
-    vec3 ambient = light.ambient * attenuation * vec3(texture(material.diffuse, textureCoordinates));
+    vec3 ambient = light.ambient * attenuation * vec3(texture(material.textureDiffuse0, textureCoordinates));
 
     // diffuse
     vec3 lightDirection = normalize(light.position - fragmentViewPosition);
     float lightAngle = max(dot(normal, lightDirection), 0.0); // take max, because value becomes negative if angle is over 90 degrees
-    vec3 diffuse = light.diffuse * attenuation * lightAngle * vec3(texture(material.diffuse, textureCoordinates));
+    vec3 diffuse = light.diffuse * attenuation * lightAngle * vec3(texture(material.textureDiffuse0, textureCoordinates));
 
     // specular
     // reflect needs the light direction to be from the light to the fragment, not the other way around so we negate it
@@ -161,11 +161,11 @@ vec3 calculateSpotLight(SpotLight light, vec3 normal, vec3 fragmentViewPosition,
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
 
     // ambient
-    vec3 ambient = light.ambient * vec3(texture(material.diffuse, textureCoordinates));
+    vec3 ambient = light.ambient * vec3(texture(material.textureDiffuse0, textureCoordinates));
 
     // diffuse
     float lightAngle = max(dot(normal, lightDirection), 0.0); // take max, because value becomes negative if angle is over 90 degrees
-    vec3 diffuse = light.diffuse * attenuation * intensity * lightAngle * vec3(texture(material.diffuse, textureCoordinates));
+    vec3 diffuse = light.diffuse * attenuation * intensity * lightAngle * vec3(texture(material.textureDiffuse0, textureCoordinates));
 
     // specular
     vec3 viewDirection = normalize(-fragmentViewPosition);
