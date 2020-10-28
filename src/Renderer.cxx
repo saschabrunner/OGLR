@@ -666,7 +666,7 @@ namespace
 
     void mouseCallback(GLFWwindow *window, double xPos, double yPos)
     {
-        if (!ImGui::GetIO().WantCaptureMouse)
+        if (!imguiState.showMainWindow)
         {
             camera->rotate(xPos, yPos);
         }
@@ -685,6 +685,8 @@ namespace
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         {
             imguiState.showMainWindow = !imguiState.showMainWindow;
+            // reset camera so that it doesn't jerk when the imgui window is closed
+            camera->reset();
         }
         else
         {

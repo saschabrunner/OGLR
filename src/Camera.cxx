@@ -160,6 +160,11 @@ void Camera::rotate(float xPos, float yPos)
     front = getFront(pitch, yaw);
 }
 
+void Camera::reset()
+{
+    this->isFirstMove = true;
+}
+
 void Camera::move(CameraDirection direction, float deltaTime)
 {
     moveInternal(front, direction, deltaTime);

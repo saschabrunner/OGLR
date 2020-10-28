@@ -45,6 +45,7 @@ public:
     glm::mat4 calculateView() const;
     void zoom(float yOffset);
     void rotate(float xPos, float yPos);
+    void reset();
     virtual void move(CameraDirection direction, float deltaTime);
 
     float getFov() const;
