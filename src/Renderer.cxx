@@ -59,7 +59,7 @@ namespace
 
     struct
     {
-        glm::vec3 cubeColor{0.7f, 0.7f, 0.7f}; // color it is represented with in the scene
+        glm::vec3 objectColor{0.7f, 0.7f, 0.7f}; // color it is represented with in the scene
         glm::vec3 ambient{0.05f, 0.05f, 0.05f};
         glm::vec3 diffuse{0.2f, 0.2f, 0.2f};
         glm::vec3 specular{1.0f, 1.0f, 1.0f};
@@ -103,10 +103,9 @@ namespace
     std::unique_ptr<Shader> lightingShader;
     std::unique_ptr<Shader> lightSourceShader;
 
-    std::vector<glm::vec3> cubePositions;
     std::vector<glm::vec3> pointLightPositions;
 
-    GLuint lightVao;
+    std::unique_ptr<Model> sphere;
     std::unique_ptr<Model> backpack;
 
     // prototypes
@@ -207,52 +206,6 @@ namespace
         DirectoryHelper &directoryHelper = DirectoryHelper::getInstance();
 
         // clang-format off
-        // certices for a cube
-        GLfloat vertices[] = {
-            // position           normal               texture coords
-            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-             0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-            -0.5f , 0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-
-            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-        };
-
         pointLightPositions = {
             glm::vec3( 0.7f,  0.2f,  2.0f),
             glm::vec3( 2.3f, -3.3f, -4.0f),
@@ -299,28 +252,11 @@ namespace
         lightingShader->setFloat("spotLight.cutOff", spotLight.cutOff);
         lightingShader->setFloat("spotLight.outerCutOff", spotLight.outerCutOff);
 
-        // shader for the light source cubes
+        // shader for the light source objects
         lightSourceShader = std::unique_ptr<Shader>(new Shader(
             DirectoryHelper::getInstance().locateData("shaders/04_normalCorrected.vert"),
             DirectoryHelper::getInstance().locateData("shaders/04_color.frag")));
-        lightSourceShader->setFloat("iColor", pointLight.cubeColor);
-
-        // create buffer for cube data (note: GL_ARRAY_BUFFER is independent of vao)
-        GLuint vbo;
-        glGenBuffers(1, &vbo);
-        // note: glBindBuffer does not affect the vao when binding to GL_ARRAY_BUFFER! glVertexAttribPointer will!
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        // copy vertex data into buffer
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-        // set up light VAO
-        glGenVertexArrays(1, &lightVao);
-        glBindVertexArray(lightVao);
-        // actually link buffer data to vao
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void *)0);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
+        lightSourceShader->setFloat("iColor", pointLight.objectColor);
 
         // camera slightly off to the side and looking down from above
         camera = std::unique_ptr<Camera>(new Camera(
@@ -331,6 +267,8 @@ namespace
 
         backpack = std::unique_ptr<Model>(
             new Model(directoryHelper.locateData("objects/backpack/backpack.obj")));
+        sphere = std::unique_ptr<Model>(
+            new Model(directoryHelper.locateData("objects/sphere/sphere.obj")));
     }
 
     void moveCamera()
@@ -399,15 +337,13 @@ namespace
         lightSourceShader->setFloat("projection", projection);
 
         // draw light sources
-        glBindVertexArray(lightVao);
         for (glm::vec3 &pointLightPosition : pointLightPositions)
         {
             model = glm::translate(identityMatrix, pointLightPosition);
             model = glm::scale(model, glm::vec3(0.2f));
             lightSourceShader->setFloat("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            sphere->draw(*lightSourceShader);
         }
-        glBindVertexArray(0);
     }
 
     void drawImgui()
@@ -518,10 +454,10 @@ namespace
                     updatePointLightAttribute("specular", pointLight.specular);
                 }
 
-                if (ImGui::ColorEdit3("Cube color##Point lights",
-                                      glm::value_ptr(pointLight.cubeColor)))
+                if (ImGui::ColorEdit3("Object color##Point lights",
+                                      glm::value_ptr(pointLight.objectColor)))
                 {
-                    lightSourceShader->setFloat("iColor", pointLight.cubeColor);
+                    lightSourceShader->setFloat("iColor", pointLight.objectColor);
                 }
 
                 if (ImGui::ColorEdit3("Ambient##Point lights", glm::value_ptr(pointLight.ambient)))

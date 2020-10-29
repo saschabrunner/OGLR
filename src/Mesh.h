@@ -13,6 +13,8 @@ enum class TextureType
     emissive
 };
 
+// note: this could be optimized for meshes that don't have textures (or even normals)
+// separate vertex types could be introduced for that as an optimization
 struct Vertex
 {
     glm::vec3 position;
@@ -35,7 +37,7 @@ public:
     const std::vector<Texture> textures;
 
     Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures);
-    void draw(Shader shader);
+    void draw(Shader &shader);
 
 private:
     GLuint vao;
