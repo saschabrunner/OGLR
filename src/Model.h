@@ -29,11 +29,16 @@ private:
     void loadModel(const std::string &path);
     void processNode(aiNode *node, const aiScene *scene);
     Mesh processMesh(aiMesh *mesh, const aiScene *scene);
-    std::vector<Texture> loadMaterialTextures(aiMaterial *material, aiTextureType aiType,
-                                              TextureType type);
+    std::vector<Texture> loadMaterialTextures(aiMaterial *material, const aiScene *scene,
+                                              aiTextureType aiType, TextureType type);
+
+    static GLuint loadEmbeddedTexture(const aiTexture *texture, GLint wrappingMode = GL_REPEAT);
 
     static GLuint loadTextureFromFile(const std::string &texturePath, const std::string &baseDir,
-                                      bool gamma = false, GLint wrappingMode = GL_REPEAT);
+                                      GLint wrappingMode = GL_REPEAT);
+
+    static GLuint createGlTexture(unsigned char *buffer, int width, int height, int nrChannels,
+                                  GLint wrappingMode = GL_REPEAT);
 };
 
 #endif
